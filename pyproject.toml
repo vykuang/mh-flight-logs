@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "asean-flight-logs"
+version = "0.1.0"
+description = ""
+authors = ["vykuang <vykuang92@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.25.1"
+jupyterlab = "^4.0.5"
+python-dotenv = "^1.0.0"
+black = {extras = ["jupyter"], version = "^23.7.0"}
+pytest = "^7.4.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
