@@ -1,2 +1,6 @@
 # local data
 .env
+nohup.out
+
+# notebook artifacts
+.ipynb_checkpoints/
