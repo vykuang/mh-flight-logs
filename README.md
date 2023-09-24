@@ -33,4 +33,22 @@ Obtained from twitter developer account portal
 ## Usage
 
 1. git clone
-2. add
+1. add `.env` to project root with the following info:
+
+    ```bash
+    AVIATION_API_KEY=
+    TWITTER_API_KEY=
+    TWITTER_API_SECRET=
+    TWITTER_ACCESS_TOKEN=
+    TWITTER_ACCESS_SECRET=
+    ```
+
+1. `docker build -t asean-flight-logs .`
+1. `docker run --env-file .env asean-flight-logs`
+
+## todo
+
+1. volume for json responses and sqlite db
+1. logging
+1. retries on API call timeouts
+1. expand to other airlines for comparisons

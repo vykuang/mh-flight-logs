@@ -5,18 +5,15 @@ import sqlite3
 from sqlite3 import ProgrammingError
 import json
 from pathlib import Path
-from dotenv import load_dotenv
 from datetime import date
 from time import sleep
 from collections.abc import MutableMapping
 import tweepy
 import argparse
 
-env_path = Path("../.env")
-load_dotenv(env_path)
-av_api_key = os.getenv("AVIATION_API_KEY", "")
-av_api_url = "http://api.aviationstack.com/v1/"
-flight_api_url = av_api_url + "flights"
+AV_API_KEY = os.getenv("AVIATION_API_KEY", "")
+AV_API_URL = "http://api.aviationstack.com/v1/"
+FLIGHT_API_URL = AV_API_URL + "flights"
 
 TWITTER_API_KEY = os.getenv("TWITTER_API_KEY")
 TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET")
@@ -37,7 +34,7 @@ def get_flight_api(
     Returns responses in a dict
     """
     params = {
-        "access_key": av_api_key,  # retrieved from .env, global scope
+        "access_key": AV_API_KEY,  # retrieved from .env, global scope
         "offset": offset,
         "limit": limit,
         "airline_name": airline,
@@ -57,6 +54,8 @@ def write_local_json(
     """
     Saves the flight api response as json, to be uploaded to a data lake
     """
+    if not json_dir.exists():
+        json_dir.mkdir(parents=True)
     local_json_path = json_dir / f"flight-{str_date}-{offset}-{offset+limit}.json"
     with open(local_json_path, "w") as j:
         json.dump(api_response, j)
@@ -77,7 +76,15 @@ def get_all_delays(
     while not total or retrieved < total:
         sleep(0.5)
         print(f"retrieving {retrieved}th to {retrieved + limit}th")
-        responses.append(get_flight_api(offset=retrieved, limit=limit))
+        responses.append(
+            get_flight_api(
+                offset=retrieved,
+                limit=limit,
+                airline=airline,
+                min_delay=min_delay,
+                flight_api_url=FLIGHT_API_URL,
+            )
+        )
         # save response
         json_path = write_local_json(
             responses[-1], json_dir=json_dir, str_date=str_date, offset=retrieved
@@ -116,6 +123,11 @@ def issubstring(text: str, checklist, sep="__") -> bool:
 
 
 def find_json_schema(entries: list[dict]) -> list:
+    """
+    Returns all non-overlapping fields from the json schema by
+    iterating over all fields in each flight entry,
+    and creating a unique set
+    """
     fields = set()
     for entry in entries:
         fields.update(entry.keys())
@@ -203,8 +215,10 @@ def write_flight_tweet(
     """
     Queries the flight records database to write the tweet
     Prepared queries makes some assumption about the table schema
-    1. follows aviationstack flights endpoint
-    1. flattened, with the same sep character
+    - follows aviationstack flights endpoint
+    - flattened, with the same sep character
+
+    Returns a string populated with the query result
     """
     # defining column names inside db
     flight_num = f"flight{sep}iata"
@@ -212,8 +226,8 @@ def write_flight_tweet(
     a_delay = f"arrival{sep}delay"
     a_sched = f"arrival{sep}scheduled"
     d_port = f"departure{sep}airport"
-    d_delay = f"departure{sep}delay"
-    d_sched = f"departure{sep}scheduled"
+    # d_delay = f"departure{sep}delay"
+    # d_sched = f"departure{sep}scheduled"
 
     agg_sql = f"""
         SELECT COUNT(*) num_delayed,
@@ -332,13 +346,13 @@ if __name__ == "__main__":
     opt(
         "--json_dir",
         type=Path,
-        default=Path("../data/responses"),
+        default=Path("./data/responses"),
         help="directory to store json responses",
     )
     opt(
         "--db_path",
         type=Path,
-        default=Path("../data/flights.db"),
+        default=Path("./data/flights.db"),
         help="Path to sqlite database",
     )
     opt(
