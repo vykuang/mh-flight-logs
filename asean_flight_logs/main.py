@@ -13,6 +13,7 @@ from time import sleep
 from collections.abc import MutableMapping
 import tweepy
 import argparse
+import logging
 
 AV_API_KEY = os.getenv("AVIATION_API_KEY", "")
 AV_API_URL = "http://api.aviationstack.com/v1/"
@@ -22,29 +23,6 @@ TWITTER_API_KEY = os.getenv("TWITTER_API_KEY")
 TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET")
 TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
 TWITTER_ACCESS_SECRET = os.getenv("TWITTER_ACCESS_SECRET")
-
-
-def get_flight_api(
-    offset: int = 0,
-    limit: int = 100,
-    airline: str = "Malaysia Airlines",
-    min_delay: int = 1,
-    flight_api_url="http://api.aviationstack.com/v1/flights",
-    timeout: float = 10.0,
-) -> dict:
-    """
-    Requests aviationstack API for flight data
-    Returns responses in a dict
-    """
-    params = {
-        "access_key": AV_API_KEY,  # retrieved from .env, global scope
-        "offset": offset,
-        "limit": limit,
-        "airline_name": airline,
-        "min_delay_arr": min_delay,
-    }
-    result = requests.get(flight_api_url, params, timeout=timeout)
-    return result.json()
 
 
 def write_local_json(
@@ -60,9 +38,10 @@ def write_local_json(
     if not json_dir.exists():
         json_dir.mkdir(parents=True)
     local_json_path = json_dir / f"flight-{str_date}-{offset}-{offset+limit}.json"
+    logging.info(f"saving to {local_json_path}")
     with open(local_json_path, "w") as j:
         json.dump(api_response, j)
-        print(f"saved to {local_json_path}")
+        logging.debug(f"saved to {local_json_path}")
     return local_json_path
 
 
@@ -86,7 +65,7 @@ def get_all_delays(
     retrieved = total = 0
     while not total or retrieved < total:
         sleep(0.5)
-        print(f"retrieving {retrieved}th to {retrieved + limit}th")
+        logging.info(f"retrieving {retrieved}th to {retrieved + limit}th")
         params = {
             "access_key": AV_API_KEY,  # retrieved from .env, global scope
             "offset": retrieved,
@@ -101,6 +80,7 @@ def get_all_delays(
                 timeout=10.0,
             ).json()
         )
+        logging.debug(f"retrieved {retrieved}th to {retrieved + limit}th")
         # save response
         json_path = write_local_json(
             responses[-1], json_dir=json_dir, str_date=str_date, offset=retrieved
@@ -108,7 +88,7 @@ def get_all_delays(
         retrieved += responses[-1]["pagination"]["count"]
         if not total:
             total = responses[0]["pagination"]["total"]
-            print(f"Total records count: {total}")
+            logging.info(f"Total records count: {total}")
     return responses
 
 
@@ -219,7 +199,7 @@ def upsert_entries(
                 entries_expanded,
             )
     except ProgrammingError as e:
-        print(e)
+        logging.critical(e)
 
 
 def write_flight_tweet(
@@ -280,14 +260,18 @@ def write_flight_tweet(
 
     delays_in_sentences = "\n" + "\n".join(
         [
-            f"{d[flight_num]} from {d[d_port]} to {d[a_port]} by {int(d[a_delay])} min"
+            f"{d[flight_num]}: {d[d_port]} -> {d[a_port]}, {int(d[a_delay])} min"
             for d in delays
         ]
     )
-    pt1 = f"On {str_date}, {num_delay} MH flights were delayed"
-    pt2 = f"by an average of {avg_delay:.0f} min."
-    pt3 = f"Most delayed flights: {delays_in_sentences}"
-    return " ".join([pt1, pt2, pt3])
+    pt1 = f"{num_delay} MH flights were late on {str_date}"
+    pt2 = f"by an average of {avg_delay:.0f} min"
+    pt3 = f"Most delayed{delays_in_sentences}"
+    tweet = " ".join([pt1, pt2, pt3])
+    if (tweet_chars := len(tweet)) > 280:
+        logging.warning(f"Truncating tweet from {tweet_chars}")
+        tweet = tweet[:280]
+    return tweet
 
 
 def main(
@@ -295,17 +279,25 @@ def main(
     db_path: Path,
     str_date: str = str(date.today()),
     use_local: bool = False,
+    loglevel: str = "info",
 ):
     """
     Tweets how late malaysia airline was today
     Searches through all flights scheduled to arrive today
     Scheduled to run at 11:50 PM
     """
+    num_level = getattr(logging, loglevel.upper(), None)
+    if not isinstance(num_level, int):
+        raise ValueError(f"Invalid log level {loglevel}")
+    logging.debug(f"log level: {loglevel}")
+    logging.basicConfig(level=num_level)
+    logging.info(f"Use local json: {use_local}")
     # flatten the nested dicts in the response jsons
     if use_local:
         entries = []
         json_paths = json_dir.glob(f"flight-{str_date}-*.json")
         for json_file in json_paths:
+            logging.debug(f"looking for {json_file}")
             with open(json_file) as j:
                 flight_page = json.load(j)
                 flat = [
@@ -314,6 +306,7 @@ def main(
                 entries.extend(flat)
 
     else:
+        logging.info("Requesting flight API")
         responses = get_all_delays(str_date=str_date, json_dir=json_dir)
         # collecting records from all responses
         entries = [
@@ -324,6 +317,8 @@ def main(
 
     # creating schema from json fields
     schema = find_json_schema(entries)
+    logging.debug(f"number of fields: {len(schema)}\nschema:\n{schema}")
+    logging.debug(f"connecting to sqlite db @ {db_path}")
     db_conn = sqlite3.connect(db_path)
 
     create_table(schema, db_conn)
@@ -341,8 +336,8 @@ def main(
     payload = write_flight_tweet(db_conn, str_date=str_date)
 
     t_response = oauth1_client.create_tweet(text=payload, user_auth=True)
-    print(f"link: https://twitter.com/user/status/{t_response.data['id']}")
-    print(f"text: {t_response.data['text']}")
+    logging.info(f"link: https://twitter.com/user/status/{t_response.data['id']}")
+    logging.info(f"text: {t_response.data['text']}")
 
 
 if __name__ == "__main__":
@@ -377,5 +372,11 @@ if __name__ == "__main__":
         default=False,
         help="Look in json_dir for saved local responses instead of requesting from API",
     )
+    opt(
+        "--loglevel",
+        default="info",
+        type=str.upper,
+        help="log level: debug, info, ..., critical",
+    )
     args = parser.parse_args()
-    main(args.json_dir, args.db_path, args.arrival_date, args.use_local)
+    main(args.json_dir, args.db_path, args.arrival_date, args.use_local, args.loglevel)

@@ -1,0 +1,10 @@
+# dirs
+img/
+notebooks/
+tests/
+
+# files
+*.sh
+Dockerfile
+*.out
+*.md

@@ -49,9 +49,27 @@ Obtained from twitter developer account portal
 ## todo
 
 1. volume for json responses and sqlite db
-1. logging
-1. retries on API call timeouts
+    - container unable to open sqlite db after putting PC to sleep?
+    - exec was able to reach the db
+    - not the same db as host; cannot find `import_flight_records` table, or any table
+1. logging - ok
+1. retries on API call timeouts - ok
     - use requests.Session()
     - pass Session object to `get_flight_api` for reuse
     - rewrite `get_flight_api`, or fold into `get_all_delays`
-1. expand to other airlines for comparisons
+1. expand to other Asean flag carrier airlines, as well as other popular regionals for comparisons
+    - SEA:
+        - Royal Brunei Airlines
+        - Cambodia Angkor Air
+        - Garuda Indonesia
+        - Lao Airlines
+        - Myanmar National Airlines
+        - Philippine Airlines
+        - Singapore Airlines
+        - Thai Airways International
+        - Vietnam Airlines
+    - Others:
+        - China Airlines (TW)
+        - Air China
+        - Cathay Pacific
+        - Air Asia
