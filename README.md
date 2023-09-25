@@ -52,6 +52,9 @@ Obtained from twitter developer account portal
     - container unable to open sqlite db after putting PC to sleep?
     - exec was able to reach the db
     - not the same db as host; cannot find `import_flight_records` table, or any table
+    - bind mounting `main.py` and calling it with `./main.py` caused "no such file" error
+    - it works when I exec into the container. `main.py` is in `/app`, and I can run it
+    - tweet is posted, but no output??? logging is not captured by STDOUT normally
 1. logging - ok
 1. retries on API call timeouts - ok
     - use requests.Session()

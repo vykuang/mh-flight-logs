@@ -1,7 +1,6 @@
 # slim doesn't have curl
 FROM python:3.11-buster as builder
 
-
 ENV POETRY_VERSION=1.4.1 \
     POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
@@ -9,6 +8,7 @@ ENV POETRY_VERSION=1.4.1 \
     POETRY_HOME=/etc/poetry \
     POETRY_CACHE_DIR=/tmp/poetry_cache
 
+# install poetry and add to PATH
 RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="$POETRY_HOME/bin:$PATH"
 
@@ -21,5 +21,6 @@ ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH"
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
-COPY asean_flight_logs/main.py ./main.py
-ENTRYPOINT [ "./main.py" ]
+#COPY asean_flight_logs/main.py ./main.py
+VOLUME [ "/data" ]
+# ENTRYPOINT [ "./main.py" ]

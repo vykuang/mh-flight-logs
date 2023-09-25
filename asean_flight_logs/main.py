@@ -265,7 +265,7 @@ def write_flight_tweet(
         ]
     )
     pt1 = f"{num_delay} MH flights were late on {str_date}"
-    pt2 = f"by an average of {avg_delay:.0f} min"
+    pt2 = f"by an average of {avg_delay:.0f} min."
     pt3 = f"Most delayed{delays_in_sentences}"
     tweet = " ".join([pt1, pt2, pt3])
     if (tweet_chars := len(tweet)) > 280:
@@ -357,13 +357,13 @@ if __name__ == "__main__":
     opt(
         "--json_dir",
         type=Path,
-        default=Path("./data/responses"),
+        default=Path("/data/responses"),
         help="directory to store json responses",
     )
     opt(
         "--db_path",
         type=Path,
-        default=Path("./data/flights.db"),
+        default=Path("/data/flights.db"),
         help="Path to sqlite database",
     )
     opt(
