@@ -51,4 +51,7 @@ Obtained from twitter developer account portal
 1. volume for json responses and sqlite db
 1. logging
 1. retries on API call timeouts
+    - use requests.Session()
+    - pass Session object to `get_flight_api` for reuse
+    - rewrite `get_flight_api`, or fold into `get_all_delays`
 1. expand to other airlines for comparisons

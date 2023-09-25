@@ -1,6 +1,9 @@
 #! /usr/bin/env python
 import os
 import requests
+from urllib3.util import Retry
+from requests import Session
+from requests.adapters import HTTPAdapter
 import sqlite3
 from sqlite3 import ProgrammingError
 import json
@@ -71,19 +74,32 @@ def get_all_delays(
     str_date: str = str(date.today()),
     flight_api_url="http://api.aviationstack.com/v1/flights",
 ):
+    sesh = Session()
+    retries = Retry(
+        total=3,
+        backoff_factor=0.1,
+        status_forcelist=[502, 503, 504],
+        allowed_methods={"POST"},
+    )
+    sesh.mount(AV_API_URL, HTTPAdapter(max_retries=retries))
     responses = []
     retrieved = total = 0
     while not total or retrieved < total:
         sleep(0.5)
         print(f"retrieving {retrieved}th to {retrieved + limit}th")
+        params = {
+            "access_key": AV_API_KEY,  # retrieved from .env, global scope
+            "offset": retrieved,
+            "limit": limit,
+            "airline_name": airline,
+            "min_delay_arr": min_delay,
+        }
         responses.append(
-            get_flight_api(
-                offset=retrieved,
-                limit=limit,
-                airline=airline,
-                min_delay=min_delay,
-                flight_api_url=FLIGHT_API_URL,
-            )
+            sesh.get(
+                url=FLIGHT_API_URL,
+                params=params,
+                timeout=10.0,
+            ).json()
         )
         # save response
         json_path = write_local_json(
