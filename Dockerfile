@@ -21,6 +21,8 @@ ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH"
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+# for :prod; otherwise mount during dev to avoid rebuilding
 #COPY asean_flight_logs/main.py ./main.py
+WORKDIR /app
 VOLUME [ "/data" ]
-# ENTRYPOINT [ "./main.py" ]
+ENTRYPOINT [ "./main.py" ]

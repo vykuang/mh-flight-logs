@@ -52,10 +52,14 @@ Obtained from twitter developer account portal
     - container unable to open sqlite db after putting PC to sleep?
     - exec was able to reach the db
     - not the same db as host; cannot find `import_flight_records` table, or any table
+       - mount `./data` to something besides `/app`, i.e. `/data` (not inside `/app`)
     - bind mounting `main.py` and calling it with `./main.py` caused "no such file" error
-    - it works when I exec into the container. `main.py` is in `/app`, and I can run it
-    - tweet is posted, but no output??? logging is not captured by STDOUT normally
+       - works when I exec into the container. `main.py` is in `/app`, and I can run it
+       - add `WORKDIR` to runtime image in Dockerfile; defaults to root `/` otherwise
 1. logging - ok
+    - tweet is posted, but no output. logging is not captured by STDOUT normally
+    - add `sys.stdout` to `StreamHandler`
+    - add `FileHandler('debug.log')`
 1. retries on API call timeouts - ok
     - use requests.Session()
     - pass Session object to `get_flight_api` for reuse

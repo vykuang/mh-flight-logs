@@ -1,0 +1,112 @@
+log level: DEBUG
+Use local json: True
+looking for /data/responses/flight-2023-09-16-100-200.json
+looking for /data/responses/flight-2023-09-16-500-600.json
+looking for /data/responses/flight-2023-09-16-700-800.json
+looking for /data/responses/flight-2023-09-16-0-100.json
+looking for /data/responses/flight-2023-09-16-400-500.json
+looking for /data/responses/flight-2023-09-16-300-400.json
+looking for /data/responses/flight-2023-09-16-600-700.json
+looking for /data/responses/flight-2023-09-16-200-300.json
+number of fields: 51
+schema:
+['arrival__actual_runway', 'aircraft__icao', 'departure__delay', 'arrival__gate', 'flight_date', 'departure__actual', 'arrival__iata', 'live__speed_vertical', 'arrival__scheduled', 'arrival__timezone', 'live__longitude', 'airline__icao', 'departure__scheduled', 'live__is_ground', 'departure__actual_runway', 'arrival__terminal', 'departure__gate', 'flight__number', 'flight_status', 'flight__codeshared__airline_iata', 'flight__codeshared__airline_icao', 'aircraft__iata', 'departure__estimated_runway', 'arrival__estimated_runway', 'live__latitude', 'arrival__delay', 'airline__iata', 'flight__codeshared__flight_iata', 'departure__estimated', 'departure__timezone', 'live__updated', 'arrival__icao', 'flight__iata', 'live__speed_horizontal', 'aircraft__icao24', 'flight__codeshared__flight_icao', 'aircraft__registration', 'departure__icao', 'live__direction', 'arrival__baggage', 'airline__name', 'live__altitude', 'departure__airport', 'arrival__estimated', 'flight__codeshared__airline_name', 'departure__iata', 'departure__terminal', 'arrival__actual', 'flight__codeshared__flight_number', 'flight__icao', 'arrival__airport']
+connecting to sqlite db @ /data/flights.db
+log level: DEBUG
+Use local json: True
+looking for /data/responses/flight-2023-09-16-100-200.json
+looking for /data/responses/flight-2023-09-16-500-600.json
+looking for /data/responses/flight-2023-09-16-700-800.json
+looking for /data/responses/flight-2023-09-16-0-100.json
+looking for /data/responses/flight-2023-09-16-400-500.json
+looking for /data/responses/flight-2023-09-16-300-400.json
+looking for /data/responses/flight-2023-09-16-600-700.json
+looking for /data/responses/flight-2023-09-16-200-300.json
+number of fields: 51
+schema:
+['aircraft__icao24', 'aircraft__icao', 'departure__estimated_runway', 'arrival__airport', 'live__is_ground', 'departure__delay', 'live__altitude', 'arrival__timezone', 'arrival__estimated', 'departure__actual', 'departure__terminal', 'departure__timezone', 'departure__gate', 'airline__iata', 'flight__icao', 'arrival__icao', 'flight__codeshared__flight_icao', 'arrival__baggage', 'arrival__scheduled', 'flight_date', 'live__direction', 'flight__codeshared__airline_name', 'flight__codeshared__airline_iata', 'flight__codeshared__flight_number', 'departure__icao', 'aircraft__registration', 'departure__airport', 'live__speed_horizontal', 'flight__codeshared__flight_iata', 'arrival__gate', 'airline__name', 'departure__actual_runway', 'arrival__actual', 'departure__estimated', 'arrival__iata', 'flight__number', 'flight__codeshared__airline_icao', 'live__updated', 'live__longitude', 'arrival__terminal', 'flight_status', 'airline__icao', 'arrival__actual_runway', 'flight__iata', 'aircraft__iata', 'arrival__delay', 'live__latitude', 'arrival__estimated_runway', 'live__speed_vertical', 'departure__iata', 'departure__scheduled']
+connecting to sqlite db @ /data/flights.db
+Use local json: True
+log level: DEBUG
+Use local json: False
+Requesting flight API
+retrieving 0th to 100th
+retrieved 0th to 100th
+saving to /data/responses/flight-2023-09-24-0-100.json
+saved to /data/responses/flight-2023-09-24-0-100.json
+Total records count: 530
+retrieving 100th to 200th
+retrieved 100th to 200th
+saving to /data/responses/flight-2023-09-24-100-200.json
+saved to /data/responses/flight-2023-09-24-100-200.json
+retrieving 200th to 300th
+retrieved 200th to 300th
+saving to /data/responses/flight-2023-09-24-200-300.json
+saved to /data/responses/flight-2023-09-24-200-300.json
+retrieving 300th to 400th
+retrieved 300th to 400th
+saving to /data/responses/flight-2023-09-24-300-400.json
+saved to /data/responses/flight-2023-09-24-300-400.json
+retrieving 400th to 500th
+retrieved 400th to 500th
+saving to /data/responses/flight-2023-09-24-400-500.json
+saved to /data/responses/flight-2023-09-24-400-500.json
+retrieving 500th to 600th
+retrieved 500th to 600th
+saving to /data/responses/flight-2023-09-24-500-600.json
+saved to /data/responses/flight-2023-09-24-500-600.json
+number of fields: 51
+schema:
+['arrival__terminal', 'departure__estimated_runway', 'flight_date', 'flight__codeshared__flight_number', 'departure__estimated', 'departure__actual_runway', 'arrival__icao', 'departure__scheduled', 'arrival__estimated_runway', 'live__is_ground', 'arrival__delay', 'flight__iata', 'aircraft__registration', 'aircraft__iata', 'departure__gate', 'arrival__timezone', 'airline__iata', 'departure__airport', 'arrival__airport', 'departure__delay', 'flight__icao', 'flight_status', 'aircraft__icao24', 'live__speed_vertical', 'arrival__estimated', 'flight__codeshared__airline_icao', 'departure__terminal', 'live__latitude', 'aircraft__icao', 'flight__number', 'departure__timezone', 'live__longitude', 'live__direction', 'departure__actual', 'arrival__baggage', 'flight__codeshared__flight_icao', 'arrival__actual', 'live__altitude', 'arrival__scheduled', 'flight__codeshared__airline_name', 'flight__codeshared__airline_iata', 'arrival__actual_runway', 'departure__iata', 'airline__icao', 'airline__name', 'flight__codeshared__flight_iata', 'live__speed_horizontal', 'departure__icao', 'arrival__gate', 'arrival__iata', 'live__updated']
+connecting to sqlite db @ /data/flights.db
+Executing DDL
+DDL executed
+51 columns retrieved from tbl_info
+log level: DEBUG
+Use local json: True
+looking for /data/responses/flight-2023-09-24-300-400.json
+looking for /data/responses/flight-2023-09-24-100-200.json
+looking for /data/responses/flight-2023-09-24-200-300.json
+looking for /data/responses/flight-2023-09-24-500-600.json
+looking for /data/responses/flight-2023-09-24-400-500.json
+looking for /data/responses/flight-2023-09-24-0-100.json
+number of fields: 51
+schema:
+['departure__icao', 'departure__estimated', 'flight__icao', 'flight__codeshared__airline_name', 'departure__actual', 'aircraft__registration', 'flight_status', 'arrival__terminal', 'flight__iata', 'flight__codeshared__airline_iata', 'aircraft__icao24', 'flight__codeshared__flight_iata', 'departure__iata', 'arrival__baggage', 'live__altitude', 'departure__delay', 'departure__airport', 'arrival__icao', 'aircraft__icao', 'arrival__timezone', 'live__longitude', 'arrival__estimated', 'arrival__airport', 'airline__icao', 'arrival__delay', 'live__speed_vertical', 'arrival__estimated_runway', 'airline__name', 'arrival__scheduled', 'departure__scheduled', 'live__is_ground', 'departure__estimated_runway', 'live__latitude', 'departure__actual_runway', 'departure__timezone', 'flight__number', 'live__updated', 'live__speed_horizontal', 'departure__terminal', 'aircraft__iata', 'flight__codeshared__flight_number', 'arrival__iata', 'flight__codeshared__flight_icao', 'live__direction', 'arrival__gate', 'flight__codeshared__airline_icao', 'airline__iata', 'arrival__actual_runway', 'departure__gate', 'arrival__actual', 'flight_date']
+connecting to sqlite db @ /data/flights.db
+Executing DDL
+DDL executed
+51 columns retrieved from tbl_info
+530 entries UPSERTed into database
+Querying database...
+DB query executed
+tweet length: 218
+link: https://twitter.com/user/status/1706499145513721932
+text: 297 MH flights were late on 2023-09-24 by an average of 23 min. Most delayed
+MH9663: Chicago O'hare -&gt; Los Angeles, 197 min
+MH9506: Dallas/Fort Worth -&gt; John F Kennedy, 134 min
+MH9110: Haneda -&gt; Chicago O'hare, 131 min
+log level: DEBUG
+Use local json: True
+looking for /data/responses/flight-2023-09-24-300-400.json
+looking for /data/responses/flight-2023-09-24-100-200.json
+looking for /data/responses/flight-2023-09-24-200-300.json
+looking for /data/responses/flight-2023-09-24-500-600.json
+looking for /data/responses/flight-2023-09-24-400-500.json
+looking for /data/responses/flight-2023-09-24-0-100.json
+number of fields: 51
+schema:
+['flight_date', 'departure__estimated', 'arrival__icao', 'arrival__terminal', 'flight__codeshared__flight_icao', 'departure__actual_runway', 'aircraft__iata', 'arrival__baggage', 'departure__iata', 'departure__gate', 'arrival__delay', 'departure__actual', 'live__speed_vertical', 'live__altitude', 'live__updated', 'departure__icao', 'flight__codeshared__airline_iata', 'aircraft__icao', 'airline__name', 'airline__iata', 'flight_status', 'departure__terminal', 'arrival__iata', 'departure__delay', 'arrival__estimated', 'flight__number', 'flight__codeshared__flight_iata', 'aircraft__icao24', 'departure__scheduled', 'flight__codeshared__airline_name', 'airline__icao', 'live__longitude', 'arrival__estimated_runway', 'arrival__actual_runway', 'flight__iata', 'flight__icao', 'flight__codeshared__flight_number', 'departure__estimated_runway', 'aircraft__registration', 'live__latitude', 'departure__timezone', 'arrival__airport', 'live__direction', 'arrival__gate', 'live__is_ground', 'departure__airport', 'arrival__timezone', 'arrival__scheduled', 'arrival__actual', 'flight__codeshared__airline_icao', 'live__speed_horizontal']
+connecting to sqlite db @ /data/flights.db
+Executing DDL
+DDL executed
+51 columns retrieved from tbl_info
+530 entries UPSERTed into database
+Querying database...
+DB query executed
+tweet length: 218
+offline tweet:
+297 MH flights were late on 2023-09-24 by an average of 23 min. Most delayed
+MH9663: Chicago O'hare -> Los Angeles, 197 min
+MH9506: Dallas/Fort Worth -> John F Kennedy, 134 min
+MH9110: Haneda -> Chicago O'hare, 131 min

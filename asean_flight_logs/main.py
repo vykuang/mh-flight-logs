@@ -14,6 +14,7 @@ from collections.abc import MutableMapping
 import tweepy
 import argparse
 import logging
+from sys import stdout
 
 AV_API_KEY = os.getenv("AVIATION_API_KEY", "")
 AV_API_URL = "http://api.aviationstack.com/v1/"
@@ -23,6 +24,13 @@ TWITTER_API_KEY = os.getenv("TWITTER_API_KEY")
 TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET")
 TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
 TWITTER_ACCESS_SECRET = os.getenv("TWITTER_ACCESS_SECRET")
+
+logging.basicConfig(
+    format="%(asctime)s [%(levelname)s] %(funcName)s: %(message)s",
+    datefmt="%Y/%m/%d %H:%M:%S",
+    handlers=[logging.StreamHandler(stdout)],
+)
+logger = logging.getLogger(__name__)
 
 
 def write_local_json(
@@ -38,10 +46,10 @@ def write_local_json(
     if not json_dir.exists():
         json_dir.mkdir(parents=True)
     local_json_path = json_dir / f"flight-{str_date}-{offset}-{offset+limit}.json"
-    logging.info(f"saving to {local_json_path}")
+    logger.info(f"saving to {local_json_path}")
     with open(local_json_path, "w") as j:
         json.dump(api_response, j)
-        logging.debug(f"saved to {local_json_path}")
+        logger.debug(f"saved to {local_json_path}")
     return local_json_path
 
 
@@ -65,7 +73,7 @@ def get_all_delays(
     retrieved = total = 0
     while not total or retrieved < total:
         sleep(0.5)
-        logging.info(f"retrieving {retrieved}th to {retrieved + limit}th")
+        logger.info(f"retrieving {retrieved}th to {retrieved + limit}th")
         params = {
             "access_key": AV_API_KEY,  # retrieved from .env, global scope
             "offset": retrieved,
@@ -80,7 +88,7 @@ def get_all_delays(
                 timeout=10.0,
             ).json()
         )
-        logging.debug(f"retrieved {retrieved}th to {retrieved + limit}th")
+        logger.debug(f"retrieved {retrieved}th to {retrieved + limit}th")
         # save response
         json_path = write_local_json(
             responses[-1], json_dir=json_dir, str_date=str_date, offset=retrieved
@@ -88,7 +96,7 @@ def get_all_delays(
         retrieved += responses[-1]["pagination"]["count"]
         if not total:
             total = responses[0]["pagination"]["total"]
-            logging.info(f"Total records count: {total}")
+            logger.info(f"Total records count: {total}")
     return responses
 
 
@@ -141,6 +149,7 @@ def create_table(
     """
     Creates the table in sqlite if it doesn't already exist
     """
+    logger.debug("Executing DDL")
     pk = [
         ["flight", "iata"],
         ["departure", "iata"],
@@ -157,6 +166,7 @@ def create_table(
         PRIMARY KEY ({", ".join(pk)})
     )"""
     db_conn.execute(ddl)
+    logger.debug("DDL executed")
 
 
 def dict_factory(cursor, row):
@@ -186,7 +196,7 @@ def upsert_entries(
         curs = db_conn.execute(f"pragma table_info('{tbl_name}')")
         tbl_info = curs.fetchall()
     col_names = [col_info["name"] for col_info in tbl_info]
-
+    logger.debug(f"{len(col_names)} columns retrieved from tbl_info")
     # inserting nulls where the field is empty
     entries_expanded = (
         {field: entry.get(field) for field in col_names} for entry in entries
@@ -200,6 +210,7 @@ def upsert_entries(
             )
     except ProgrammingError as e:
         logging.critical(e)
+    logger.info(f"{len(entries)} entries UPSERTed into database")
 
 
 def write_flight_tweet(
@@ -252,12 +263,13 @@ def write_flight_tweet(
         ORDER BY delay_rank
         LIMIT 3;
     """
+    logger.debug("Querying database...")
     with db_conn:
         curs = db_conn.execute(agg_sql)
         num_delay, avg_delay = curs.fetchall()[0].values()
         curs = db_conn.execute(most_delayed_sql)
         delays = curs.fetchall()
-
+    logger.info("DB query executed")
     delays_in_sentences = "\n" + "\n".join(
         [
             f"{d[flight_num]}: {d[d_port]} -> {d[a_port]}, {int(d[a_delay])} min"
@@ -271,33 +283,51 @@ def write_flight_tweet(
     if (tweet_chars := len(tweet)) > 280:
         logging.warning(f"Truncating tweet from {tweet_chars}")
         tweet = tweet[:280]
+    logger.debug(f"tweet length: {len(tweet)}")
     return tweet
 
 
 def main(
-    json_dir: Path,
-    db_path: Path,
     str_date: str = str(date.today()),
-    use_local: bool = False,
+    data_dir: Path = Path("/data"),
+    local_json: bool = False,
+    local_tweet: bool = False,
     loglevel: str = "info",
 ):
     """
     Tweets how late malaysia airline was today
     Searches through all flights scheduled to arrive today
-    Scheduled to run at 11:50 PM
+    Scheduled to run daily at 23:50:00
+
+    Parameters:
+    str_date: str
+        date in yyyy-mm-dd format
+
+    data_dir: Path
+        mount point for container. program will look for and store json responses
+        in data_dir / "responses", and sqlite db in data_dir / "flights.db"
+
+    local_json: bool
+        if True, program will look for json responses in data_dir / "responses"
+        instead of requesting API
+
+    loglevel: str
+        one of default log levels; lower or uppercase accepted
     """
     num_level = getattr(logging, loglevel.upper(), None)
     if not isinstance(num_level, int):
         raise ValueError(f"Invalid log level {loglevel}")
-    logging.debug(f"log level: {loglevel}")
-    logging.basicConfig(level=num_level)
-    logging.info(f"Use local json: {use_local}")
+    logger.setLevel(num_level)
+    logger.addHandler(logging.FileHandler(data_dir / "debug.log"))
+    logger.debug(f"log level: {loglevel}")
+    logger.info(f"Use local json: {local_json}")
     # flatten the nested dicts in the response jsons
-    if use_local:
+    json_dir = data_dir / "responses"
+    if local_json:
         entries = []
         json_paths = json_dir.glob(f"flight-{str_date}-*.json")
         for json_file in json_paths:
-            logging.debug(f"looking for {json_file}")
+            logger.debug(f"looking for {json_file}")
             with open(json_file) as j:
                 flight_page = json.load(j)
                 flat = [
@@ -306,7 +336,7 @@ def main(
                 entries.extend(flat)
 
     else:
-        logging.info("Requesting flight API")
+        logger.info("Requesting flight API")
         responses = get_all_delays(str_date=str_date, json_dir=json_dir)
         # collecting records from all responses
         entries = [
@@ -317,8 +347,9 @@ def main(
 
     # creating schema from json fields
     schema = find_json_schema(entries)
-    logging.debug(f"number of fields: {len(schema)}\nschema:\n{schema}")
-    logging.debug(f"connecting to sqlite db @ {db_path}")
+    logger.debug(f"number of fields: {len(schema)}\nschema:\n{schema}")
+    db_path = data_dir / "flights.db"
+    logger.debug(f"connecting to sqlite db @ {db_path}")
     db_conn = sqlite3.connect(db_path)
 
     create_table(schema, db_conn)
@@ -334,10 +365,17 @@ def main(
         access_token_secret=TWITTER_ACCESS_SECRET,
     )
     payload = write_flight_tweet(db_conn, str_date=str_date)
-
-    t_response = oauth1_client.create_tweet(text=payload, user_auth=True)
-    logging.info(f"link: https://twitter.com/user/status/{t_response.data['id']}")
-    logging.info(f"text: {t_response.data['text']}")
+    if local_tweet:
+        logger.info(f"offline tweet:\n{payload}")
+    else:
+        try:
+            t_response = oauth1_client.create_tweet(text=payload, user_auth=True)
+            logger.info(
+                f"link: https://twitter.com/user/status/{t_response.data['id']}"
+            )
+            logger.info(f"text: {t_response.data['text']}")
+        except Exception as e:
+            logger.error(f"Tweet failed: {e}")
 
 
 if __name__ == "__main__":
@@ -352,25 +390,25 @@ if __name__ == "__main__":
         "--arrival_date",
         type=str,
         default=str(date.today()),
-        help="Date in yyyy-mm-dd format, to look for late flights; best with --use_local",
+        help="Date in yyyy-mm-dd format to look for delayed flights; best with --local_json",
     )
     opt(
-        "--json_dir",
+        "--data_dir",
         type=Path,
-        default=Path("/data/responses"),
-        help="directory to store json responses",
+        default=Path("/data"),
+        help="Container mount directory to store json responses and sqlite db",
     )
     opt(
-        "--db_path",
-        type=Path,
-        default=Path("/data/flights.db"),
-        help="Path to sqlite database",
-    )
-    opt(
-        "--use_local",
+        "--local_json",
         action="store_true",
         default=False,
         help="Look in json_dir for saved local responses instead of requesting from API",
+    )
+    opt(
+        "--local_tweet",
+        action="store_true",
+        default=False,
+        help="Print tweet to console instead of posting online",
     )
     opt(
         "--loglevel",
@@ -379,4 +417,10 @@ if __name__ == "__main__":
         help="log level: debug, info, ..., critical",
     )
     args = parser.parse_args()
-    main(args.json_dir, args.db_path, args.arrival_date, args.use_local, args.loglevel)
+    main(
+        args.arrival_date,
+        args.data_dir,
+        args.local_json,
+        args.local_tweet,
+        args.loglevel,
+    )
