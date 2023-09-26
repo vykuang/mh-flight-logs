@@ -15,6 +15,7 @@ import tweepy
 import argparse
 import logging
 from sys import stdout
+import jinja2
 
 AV_API_KEY = os.getenv("AVIATION_API_KEY", "")
 AV_API_URL = "http://api.aviationstack.com/v1/"
@@ -218,6 +219,8 @@ def write_flight_tweet(
     tbl_name: str = "import_flight_records",
     str_date: str = str(date.today()),
     sep: str = "__",
+    num_delay: int = 3,
+    template_dir: Path = Path("templates"),
 ) -> str:
     """
     Queries the flight records database to write the tweet
@@ -227,52 +230,43 @@ def write_flight_tweet(
 
     Returns a string populated with the query result
     """
-    # defining column names inside db
+    # defining column names inside db for populating the tweet
     flight_num = f"flight{sep}iata"
     a_port = f"arrival{sep}airport"
     a_delay = f"arrival{sep}delay"
     a_sched = f"arrival{sep}scheduled"
     d_port = f"departure{sep}airport"
-    # d_delay = f"departure{sep}delay"
-    # d_sched = f"departure{sep}scheduled"
 
-    agg_sql = f"""
-        SELECT COUNT(*) num_delayed,
-        AVG({a_delay}) avg_delay
-        FROM {tbl_name}
-        WHERE DATE({a_sched}) = '{str_date}'
-    """
-
-    most_delayed_sql = f"""
-        SELECT 
-            ROW_NUMBER() OVER (ORDER BY CAST({a_delay} AS INTEGER) DESC) delay_rank,
-            {flight_num},
-            REPLACE(
-            REPLACE(
-            REPLACE({a_port}, ' International Airport', '')
-            , ' International', '')
-            , ' Airport', '') AS {a_port},
-            REPLACE(
-            REPLACE(
-            REPLACE({d_port}, ' International Airport', '')
-            , ' International', '')
-            , ' Airport', '') AS {d_port},
-            {a_delay}
-        FROM {tbl_name}
-        WHERE DATE({a_sched}) = '{str_date}'
-        ORDER BY delay_rank
-        LIMIT 3;
-    """
+    # params to render the query template
+    params = dict(
+        flight_num=flight_num,
+        a_port=a_port,
+        a_delay=a_delay,
+        a_sched=a_sched,
+        d_port=d_port,
+        num_delay=3,
+        str_date=str_date,
+        tbl_name=tbl_name,
+    )
+    logger.debug("Instantiating jinja environment")
+    env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
+    logger.debug(
+        f"Searching for sql templates from {(Path.cwd() / template_dir).resolve()}"
+    )
+    agg_sql = env.get_template("agg.sql").render(params)
+    logger.debug(f"rendered agg_sql:\n{agg_sql}")
+    delayed_sql = env.get_template("delayed.sql").render(params)
+    logger.debug(f"rendered delayed_sql:\n{delayed_sql}")
     logger.debug("Querying database...")
     with db_conn:
         curs = db_conn.execute(agg_sql)
         num_delay, avg_delay = curs.fetchall()[0].values()
-        curs = db_conn.execute(most_delayed_sql)
+        curs = db_conn.execute(delayed_sql)
         delays = curs.fetchall()
     logger.info("DB query executed")
     delays_in_sentences = "\n" + "\n".join(
         [
-            f"{d[flight_num]}: {d[d_port]} -> {d[a_port]}, {int(d[a_delay])} min"
+            f"{d[flight_num]}: {d[d_port]} to {d[a_port]}, {int(d[a_delay])} min"
             for d in delays
         ]
     )
@@ -281,7 +275,7 @@ def write_flight_tweet(
     pt3 = f"Most delayed{delays_in_sentences}"
     tweet = " ".join([pt1, pt2, pt3])
     if (tweet_chars := len(tweet)) > 280:
-        logging.warning(f"Truncating tweet from {tweet_chars}")
+        logging.warning(f"Truncating tweet from {tweet_chars} to 280 chars")
         tweet = tweet[:280]
     logger.debug(f"tweet length: {len(tweet)}")
     return tweet
@@ -289,7 +283,8 @@ def write_flight_tweet(
 
 def main(
     str_date: str = str(date.today()),
-    data_dir: Path = Path("/data"),
+    data_dir: Path = Path("data"),
+    template_dir: Path = Path("templates"),
     local_json: bool = False,
     local_tweet: bool = False,
     loglevel: str = "info",
@@ -364,7 +359,8 @@ def main(
         access_token=TWITTER_ACCESS_TOKEN,
         access_token_secret=TWITTER_ACCESS_SECRET,
     )
-    payload = write_flight_tweet(db_conn, str_date=str_date)
+    payload = write_flight_tweet(db_conn, str_date=str_date, template_dir=template_dir)
+    db_conn.close()
     if local_tweet:
         logger.info(f"offline tweet:\n{payload}")
     else:
@@ -395,8 +391,14 @@ if __name__ == "__main__":
     opt(
         "--data_dir",
         type=Path,
-        default=Path("/data"),
-        help="Container mount directory to store json responses and sqlite db",
+        default=Path("data"),
+        help="Directory to store json responses and sqlite db",
+    )
+    opt(
+        "--template_dir",
+        type=Path,
+        default=Path("templates"),
+        help="Directory for sql templates",
     )
     opt(
         "--local_json",
@@ -420,6 +422,7 @@ if __name__ == "__main__":
     main(
         args.arrival_date,
         args.data_dir,
+        args.template_dir,
         args.local_json,
         args.local_tweet,
         args.loglevel,

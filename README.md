@@ -80,3 +80,6 @@ Obtained from twitter developer account portal
         - Air China
         - Cathay Pacific
         - Air Asia
+    - will need additional API keys for each airline to have enough quota
+        - each airline requires < 10 calls per day
+        - 1000 calls / 30 days / 10 calls per airline ~= 3 airlines
