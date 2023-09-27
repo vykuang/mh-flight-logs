@@ -1,5 +1,6 @@
 # local data
 *.json
+data/
 .env
 nohup.out
 
