@@ -283,3 +283,352 @@ offline tweet:
 MH88: Kuala Lumpur (klia) to Narita, 142 min
 MH133: Kuala Lumpur (klia) to Auckland, 126 min
 MH9210: Hong Kong to John F Kennedy, 91 min
+log level: DEBUG
+Use local json: True
+looking for /data/responses/flight-2023-09-16-100-200.json
+looking for /data/responses/flight-2023-09-16-500-600.json
+looking for /data/responses/flight-2023-09-16-700-800.json
+looking for /data/responses/flight-2023-09-16-0-100.json
+looking for /data/responses/flight-2023-09-16-400-500.json
+looking for /data/responses/flight-2023-09-16-300-400.json
+looking for /data/responses/flight-2023-09-16-600-700.json
+looking for /data/responses/flight-2023-09-16-200-300.json
+number of fields: 51
+schema:
+['arrival__icao', 'arrival__baggage', 'arrival__gate', 'arrival__timezone', 'arrival__actual_runway', 'flight_status', 'live__direction', 'departure__estimated', 'aircraft__icao24', 'aircraft__icao', 'departure__iata', 'aircraft__iata', 'aircraft__registration', 'departure__terminal', 'departure__timezone', 'flight__number', 'live__speed_vertical', 'flight__codeshared__flight_icao', 'arrival__scheduled', 'arrival__estimated_runway', 'arrival__estimated', 'airline__icao', 'airline__iata', 'live__latitude', 'flight__icao', 'arrival__terminal', 'departure__actual_runway', 'airline__name', 'live__longitude', 'live__speed_horizontal', 'flight__codeshared__airline_iata', 'flight__codeshared__flight_number', 'departure__gate', 'arrival__airport', 'flight__codeshared__airline_name', 'live__is_ground', 'departure__scheduled', 'departure__icao', 'arrival__actual', 'flight__codeshared__airline_icao', 'arrival__delay', 'flight__iata', 'departure__actual', 'flight__codeshared__flight_iata', 'departure__airport', 'live__updated', 'live__altitude', 'departure__estimated_runway', 'flight_date', 'arrival__iata', 'departure__delay']
+connecting to sqlite db @ /data/flights.db
+Executing DDL
+DDL executed
+51 columns retrieved from tbl_info
+714 entries UPSERTed into database
+Instantiating jinja environment
+Searching for sql templates from /templates
+rendered agg_sql:
+SELECT 
+    COUNT(*) num_delayed,
+    AVG(arrival__delay) avg_delay
+FROM import_flight_records
+WHERE DATE(arrival__scheduled) = '2023-09-16';
+rendered delayed_sql:
+SELECT 
+            ROW_NUMBER() OVER (ORDER BY CAST(arrival__delay AS INTEGER) DESC) delay_rank,
+            flight__iata,
+            REPLACE(
+            REPLACE(
+            REPLACE(arrival__airport, ' International Airport', ''), 
+            ' International', ''),
+            ' Airport', '') AS arrival__airport,
+            REPLACE(
+            REPLACE(
+            REPLACE(departure__airport, ' International Airport', ''),
+            ' International', ''),
+            ' Airport', '') AS departure__airport,
+            arrival__delay
+        FROM import_flight_records
+        WHERE DATE(arrival__scheduled) = '2023-09-16'
+        ORDER BY delay_rank
+        LIMIT 3;
+Querying database...
+DB query executed
+tweet length: 213
+offline tweet:
+244 MH flights were late on 2023-09-16 by an average of 19 min. Most delayed
+MH88: Kuala Lumpur (klia) to Narita, 142 min
+MH133: Kuala Lumpur (klia) to Auckland, 126 min
+MH9210: Hong Kong to John F Kennedy, 91 min
+Use local json: False
+Requesting flight API
+retrieving 0th to 100th
+saving to /data/responses/flight-2023-09-26-0-100.json
+Total records count: 489
+retrieving 100th to 200th
+saving to /data/responses/flight-2023-09-26-100-200.json
+retrieving 200th to 300th
+saving to /data/responses/flight-2023-09-26-200-300.json
+retrieving 300th to 400th
+saving to /data/responses/flight-2023-09-26-300-400.json
+retrieving 400th to 500th
+saving to /data/responses/flight-2023-09-26-400-500.json
+489 entries UPSERTed into database
+DB query executed
+link: https://twitter.com/user/status/1706856620674994298
+text: 442 MH flights were late on 2023-09-26 by an average of 23 min. Most delayed
+MH9785: Arturo Merino Benitez to Melbourne - Tullamarine, 878 min
+MH9784: Melbourne - Tullamarine to Arturo Merino Benitez, 550 min
+MH126: Perth to Kuala Lumpur (klia), 193 min
+Use local json: False
+Requesting flight API
+retrieving 0th to 100th
+saving to /data/responses/flight-2023-09-26-0-100.json
+Total records count: 491
+retrieving 100th to 200th
+saving to /data/responses/flight-2023-09-26-100-200.json
+retrieving 200th to 300th
+saving to /data/responses/flight-2023-09-26-200-300.json
+retrieving 300th to 400th
+saving to /data/responses/flight-2023-09-26-300-400.json
+retrieving 400th to 500th
+saving to /data/responses/flight-2023-09-26-400-500.json
+491 entries UPSERTed into database
+DB query executed
+link: https://twitter.com/user/status/1706857979411365985
+text: 443 MH flights were late on 2023-09-26 by an average of 23 min. 
+1 MH9785: Arturo Merino Benitez to Melbourne - Tullamarine, 878 min
+2 MH9784: Melbourne - Tullamarine to Arturo Merino Benitez, 550 min
+3 MH126: Perth to Kuala Lumpur (klia), 193 min
+log level: DEBUG
+Use local json: True
+looking for /data/responses/flight-2023-09-26-400-500.json
+looking for /data/responses/flight-2023-09-26-100-200.json
+looking for /data/responses/flight-2023-09-26-0-100.json
+looking for /data/responses/flight-2023-09-26-200-300.json
+looking for /data/responses/flight-2023-09-26-300-400.json
+number of fields: 51
+schema:
+['live__speed_vertical', 'airline__icao', 'live__longitude', 'flight__number', 'aircraft__icao24', 'flight__codeshared__flight_iata', 'aircraft__iata', 'departure__actual', 'departure__icao', 'departure__gate', 'departure__estimated', 'arrival__actual_runway', 'arrival__actual', 'flight__iata', 'departure__delay', 'arrival__estimated_runway', 'flight__codeshared__flight_number', 'flight__codeshared__airline_icao', 'departure__terminal', 'live__direction', 'arrival__icao', 'arrival__airport', 'flight_status', 'arrival__estimated', 'arrival__scheduled', 'arrival__iata', 'airline__name', 'arrival__gate', 'arrival__baggage', 'departure__timezone', 'flight__codeshared__airline_iata', 'flight__codeshared__flight_icao', 'live__speed_horizontal', 'departure__actual_runway', 'airline__iata', 'live__updated', 'arrival__terminal', 'live__altitude', 'departure__estimated_runway', 'live__is_ground', 'departure__iata', 'flight__codeshared__airline_name', 'aircraft__icao', 'arrival__delay', 'flight_date', 'flight__icao', 'arrival__timezone', 'departure__airport', 'departure__scheduled', 'aircraft__registration', 'live__latitude']
+connecting to sqlite db @ /data/flights.db
+Executing DDL
+DDL executed
+51 columns retrieved from tbl_info
+491 entries UPSERTed into database
+Instantiating jinja environment
+Searching for sql templates from /templates
+rendered agg_sql:
+SELECT 
+    COUNT(*) num_delayed,
+    AVG(arrival__delay) avg_delay
+FROM import_flight_records
+WHERE DATE(arrival__scheduled) = '2023-09-26';
+rendered delayed_sql:
+SELECT 
+            ROW_NUMBER() OVER (ORDER BY CAST(arrival__delay AS INTEGER) DESC) delay_rank,
+            flight__iata,
+            REPLACE(
+            REPLACE(
+            REPLACE(arrival__airport, ' International Airport', ''), 
+            ' International', ''),
+            ' Airport', '') AS arrival__airport,
+            REPLACE(
+            REPLACE(
+            REPLACE(departure__airport, ' International Airport', ''),
+            ' International', ''),
+            ' Airport', '') AS departure__airport,
+            arrival__delay
+        FROM import_flight_records
+        WHERE DATE(arrival__scheduled) = '2023-09-26'
+        ORDER BY delay_rank
+        LIMIT 3;
+Querying database...
+DB query executed
+tweet length: 247
+offline tweet:
+443 MH flights were late on 2023-09-26 by an average of 23 min. 
+1 MH9785: Arturo Merino Benitez to Melbourne - Tullamarine, 878 min
+2 MH9784: Melbourne - Tullamarine to Arturo Merino Benitez, 550 min
+3 MH126: Perth to Kuala Lumpur (klia), 193 min
+log level: DEBUG
+Use local json: True
+looking for /data/responses/flight-2023-09-26-400-500.json
+looking for /data/responses/flight-2023-09-26-100-200.json
+looking for /data/responses/flight-2023-09-26-0-100.json
+looking for /data/responses/flight-2023-09-26-200-300.json
+looking for /data/responses/flight-2023-09-26-300-400.json
+number of fields: 51
+schema:
+['departure__iata', 'arrival__actual', 'airline__icao', 'departure__airport', 'departure__delay', 'arrival__iata', 'live__speed_horizontal', 'live__is_ground', 'flight__codeshared__flight_iata', 'flight__icao', 'aircraft__icao', 'airline__iata', 'live__longitude', 'live__speed_vertical', 'departure__timezone', 'flight__codeshared__flight_icao', 'departure__scheduled', 'arrival__delay', 'departure__gate', 'aircraft__icao24', 'live__direction', 'arrival__scheduled', 'flight__iata', 'arrival__estimated_runway', 'flight__number', 'flight__codeshared__airline_icao', 'departure__actual', 'flight_status', 'departure__estimated_runway', 'arrival__airport', 'airline__name', 'live__altitude', 'arrival__baggage', 'live__updated', 'arrival__gate', 'arrival__timezone', 'flight__codeshared__flight_number', 'arrival__estimated', 'departure__icao', 'aircraft__iata', 'flight_date', 'live__latitude', 'departure__terminal', 'departure__estimated', 'flight__codeshared__airline_iata', 'flight__codeshared__airline_name', 'arrival__icao', 'departure__actual_runway', 'aircraft__registration', 'arrival__terminal', 'arrival__actual_runway']
+connecting to sqlite db @ /data/flights.db
+Executing DDL
+DDL executed
+51 columns retrieved from tbl_info
+491 entries UPSERTed into database
+Instantiating jinja environment
+Searching for sql templates from /templates
+rendered agg_sql:
+SELECT 
+    COUNT(*) num_delayed,
+    AVG(arrival__delay) avg_delay
+FROM import_flight_records
+WHERE DATE(arrival__scheduled) = '2023-09-26';
+rendered delayed_sql:
+SELECT 
+            ROW_NUMBER() OVER (ORDER BY CAST(arrival__delay AS INTEGER) DESC) delay_rank,
+            flight__iata,
+            REPLACE(
+            REPLACE(
+            REPLACE(arrival__airport, ' International Airport', ''), 
+            ' International', ''),
+            ' Airport', '') AS arrival__airport,
+            REPLACE(
+            REPLACE(
+            REPLACE(departure__airport, ' International Airport', ''),
+            ' International', ''),
+            ' Airport', '') AS departure__airport,
+            arrival__delay
+        FROM import_flight_records
+        WHERE DATE(arrival__scheduled) = '2023-09-26'
+        ORDER BY delay_rank
+        LIMIT 3;
+Querying database...
+DB query executed
+tweet length: 247
+offline tweet:
+443 MH flights were late on 2023-09-26 by an average of 23 min. 
+1 MH9785: Arturo Merino Benitez to Melbourne - Tullamarine, 878 min
+2 MH9784: Melbourne - Tullamarine to Arturo Merino Benitez, 550 min
+3 MH126: Perth to Kuala Lumpur (klia), 193 min
+log level: DEBUG
+Use local json: True
+looking for /data/responses/flight-2023-09-26-400-500.json
+looking for /data/responses/flight-2023-09-26-100-200.json
+looking for /data/responses/flight-2023-09-26-0-100.json
+looking for /data/responses/flight-2023-09-26-200-300.json
+looking for /data/responses/flight-2023-09-26-300-400.json
+number of fields: 51
+schema:
+['airline__iata', 'arrival__delay', 'arrival__gate', 'departure__terminal', 'aircraft__registration', 'arrival__baggage', 'flight__codeshared__airline_icao', 'flight__icao', 'aircraft__icao', 'departure__estimated_runway', 'arrival__scheduled', 'departure__actual_runway', 'arrival__estimated_runway', 'flight__number', 'flight__codeshared__flight_number', 'flight__codeshared__airline_name', 'live__altitude', 'departure__scheduled', 'arrival__iata', 'departure__airport', 'aircraft__iata', 'arrival__estimated', 'flight_date', 'arrival__actual_runway', 'flight__codeshared__airline_iata', 'live__speed_horizontal', 'flight_status', 'live__latitude', 'departure__iata', 'departure__delay', 'arrival__icao', 'airline__icao', 'departure__icao', 'arrival__actual', 'departure__timezone', 'live__direction', 'live__longitude', 'aircraft__icao24', 'departure__actual', 'flight__codeshared__flight_iata', 'arrival__terminal', 'arrival__airport', 'flight__iata', 'flight__codeshared__flight_icao', 'live__speed_vertical', 'live__updated', 'departure__estimated', 'live__is_ground', 'airline__name', 'arrival__timezone', 'departure__gate']
+connecting to sqlite db @ /data/flights.db
+Executing DDL
+DDL executed
+51 columns retrieved from tbl_info
+491 entries UPSERTed into database
+Instantiating jinja environment
+Searching for sql templates from /templates
+rendered agg_sql:
+SELECT 
+    COUNT(*) num_delayed,
+    AVG(arrival__delay) avg_delay
+FROM import_flight_records
+WHERE DATE(arrival__scheduled) = '2023-09-26';
+rendered delayed_sql:
+SELECT 
+            ROW_NUMBER() OVER (ORDER BY CAST(arrival__delay AS INTEGER) DESC) delay_rank,
+            flight__iata,
+            REPLACE(
+            REPLACE(
+            REPLACE(arrival__airport, ' International Airport', ''), 
+            ' International', ''),
+            ' Airport', '') AS arrival__airport,
+            REPLACE(
+            REPLACE(
+            REPLACE(departure__airport, ' International Airport', ''),
+            ' International', ''),
+            ' Airport', '') AS departure__airport,
+            arrival__delay
+        FROM import_flight_records
+        WHERE DATE(arrival__scheduled) = '2023-09-26'
+        ORDER BY delay_rank
+        LIMIT 3;
+Querying database...
+DB query executed
+tweet length: 247
+offline tweet:
+443 MH flights were late on 2023-09-26 by an average of 23 min. 
+1 MH9785: Arturo Merino Benitez to Melbourne - Tullamarine, 878 min
+2 MH9784: Melbourne - Tullamarine to Arturo Merino Benitez, 550 min
+3 MH126: Perth to Kuala Lumpur (klia), 193 min
+log level: DEBUG
+Use local json: True
+looking for /data/responses/flight-2023-09-16-100-200.json
+looking for /data/responses/flight-2023-09-16-500-600.json
+looking for /data/responses/flight-2023-09-16-700-800.json
+looking for /data/responses/flight-2023-09-16-0-100.json
+looking for /data/responses/flight-2023-09-16-400-500.json
+looking for /data/responses/flight-2023-09-16-300-400.json
+looking for /data/responses/flight-2023-09-16-600-700.json
+looking for /data/responses/flight-2023-09-16-200-300.json
+number of fields: 51
+schema:
+['live__updated', 'flight__codeshared__airline_iata', 'flight__codeshared__flight_iata', 'flight__codeshared__airline_icao', 'flight__iata', 'aircraft__registration', 'airline__iata', 'arrival__timezone', 'arrival__estimated_runway', 'airline__icao', 'flight__number', 'departure__estimated_runway', 'flight__icao', 'aircraft__icao', 'arrival__icao', 'departure__estimated', 'arrival__scheduled', 'flight__codeshared__flight_number', 'live__direction', 'arrival__baggage', 'flight__codeshared__flight_icao', 'flight_status', 'aircraft__icao24', 'airline__name', 'arrival__actual', 'departure__actual', 'live__speed_horizontal', 'departure__actual_runway', 'arrival__airport', 'arrival__actual_runway', 'arrival__iata', 'live__altitude', 'live__speed_vertical', 'live__is_ground', 'departure__iata', 'aircraft__iata', 'departure__icao', 'departure__airport', 'arrival__estimated', 'flight__codeshared__airline_name', 'departure__terminal', 'departure__delay', 'departure__scheduled', 'arrival__gate', 'live__latitude', 'arrival__delay', 'flight_date', 'live__longitude', 'departure__timezone', 'departure__gate', 'arrival__terminal']
+connecting to sqlite db @ /data/flights.db
+Executing DDL
+DDL executed
+51 columns retrieved from tbl_info
+714 entries UPSERTed into database
+Instantiating jinja environment
+Searching for sql templates from /templates
+rendered agg_sql:
+SELECT 
+    COUNT(*) num_delayed,
+    AVG(arrival__delay) avg_delay
+FROM import_flight_records
+WHERE DATE(arrival__scheduled) = '2023-09-16';
+rendered delayed_sql:
+SELECT 
+            ROW_NUMBER() OVER (ORDER BY CAST(arrival__delay AS INTEGER) DESC) delay_rank,
+            flight__iata,
+            REPLACE(
+            REPLACE(
+            REPLACE(arrival__airport, ' International Airport', ''), 
+            ' International', ''),
+            ' Airport', '') AS arrival__airport,
+            REPLACE(
+            REPLACE(
+            REPLACE(departure__airport, ' International Airport', ''),
+            ' International', ''),
+            ' Airport', '') AS departure__airport,
+            arrival__delay
+        FROM import_flight_records
+        WHERE DATE(arrival__scheduled) = '2023-09-16'
+        ORDER BY delay_rank
+        LIMIT 3;
+Querying database...
+DB query executed
+tweet length: 207
+offline tweet:
+244 MH flights were late on 2023-09-16 by an average of 19 min. 
+1 MH88: Kuala Lumpur (klia) to Narita, 142 min
+2 MH133: Kuala Lumpur (klia) to Auckland, 126 min
+3 MH9210: Hong Kong to John F Kennedy, 91 min
+log level: DEBUG
+Use local json: True
+looking for /data/responses/flight-2023-09-16-100-200.json
+looking for /data/responses/flight-2023-09-16-500-600.json
+looking for /data/responses/flight-2023-09-16-700-800.json
+looking for /data/responses/flight-2023-09-16-0-100.json
+looking for /data/responses/flight-2023-09-16-400-500.json
+looking for /data/responses/flight-2023-09-16-300-400.json
+looking for /data/responses/flight-2023-09-16-600-700.json
+looking for /data/responses/flight-2023-09-16-200-300.json
+number of fields: 51
+schema:
+['airline__icao', 'departure__iata', 'flight__codeshared__flight_number', 'arrival__gate', 'flight__number', 'live__updated', 'arrival__scheduled', 'departure__scheduled', 'departure__estimated', 'flight__icao', 'live__direction', 'aircraft__iata', 'departure__delay', 'live__latitude', 'arrival__actual', 'departure__airport', 'arrival__icao', 'flight__codeshared__airline_icao', 'live__altitude', 'live__speed_horizontal', 'airline__name', 'departure__terminal', 'arrival__terminal', 'flight__codeshared__airline_iata', 'departure__gate', 'departure__actual', 'flight__iata', 'flight__codeshared__flight_icao', 'arrival__timezone', 'arrival__estimated', 'aircraft__registration', 'arrival__estimated_runway', 'flight_status', 'arrival__delay', 'flight__codeshared__flight_iata', 'live__is_ground', 'departure__timezone', 'live__longitude', 'departure__icao', 'arrival__iata', 'airline__iata', 'aircraft__icao24', 'flight__codeshared__airline_name', 'arrival__baggage', 'departure__estimated_runway', 'arrival__actual_runway', 'flight_date', 'aircraft__icao', 'departure__actual_runway', 'arrival__airport', 'live__speed_vertical']
+connecting to sqlite db @ /data/flights.db
+Executing DDL
+DDL executed
+51 columns retrieved from tbl_info
+714 entries UPSERTed into database
+Instantiating jinja environment
+Searching for sql templates from /templates
+rendered agg_sql:
+SELECT 
+    COUNT(*) num_delayed,
+    AVG(arrival__delay) avg_delay
+FROM import_flight_records
+WHERE DATE(arrival__scheduled) = '2023-09-16';
+rendered delayed_sql:
+SELECT 
+            ROW_NUMBER() OVER (ORDER BY CAST(arrival__delay AS INTEGER) DESC) delay_rank,
+            flight__iata,
+            REPLACE(
+            REPLACE(
+            REPLACE(arrival__airport, ' International Airport', ''), 
+            ' International', ''),
+            ' Airport', '') AS arrival__airport,
+            REPLACE(
+            REPLACE(
+            REPLACE(departure__airport, ' International Airport', ''),
+            ' International', ''),
+            ' Airport', '') AS departure__airport,
+            arrival__delay
+        FROM import_flight_records
+        WHERE DATE(arrival__scheduled) = '2023-09-16'
+        ORDER BY delay_rank
+        LIMIT 3;
+Querying database...
+DB query executed
+tweet length: 207
+offline tweet:
+244 MH flights were late on 2023-09-16 by an average of 19 min. 
+1 MH88: Kuala Lumpur (klia) to Narita, 142 min
+2 MH133: Kuala Lumpur (klia) to Auckland, 126 min
+3 MH9210: Hong Kong to John F Kennedy, 91 min

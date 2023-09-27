@@ -43,8 +43,7 @@ Obtained from twitter developer account portal
     TWITTER_ACCESS_SECRET=
     ```
 
-1. `docker build -t asean-flight-logs .`
-1. `docker run --env-file .env asean-flight-logs`
+1. `docker compose up --no-recreate`
 
 ## todo
 
@@ -55,7 +54,7 @@ Obtained from twitter developer account portal
        - mount `./data` to something besides `/app`, i.e. `/data` (not inside `/app`)
     - bind mounting `main.py` and calling it with `./main.py` caused "no such file" error
        - works when I exec into the container. `main.py` is in `/app`, and I can run it
-       - add `WORKDIR` to runtime image in Dockerfile; defaults to root `/` otherwise
+       - fix by add `WORKDIR` to runtime image in Dockerfile; defaults to root `/` otherwise
 1. logging - ok
     - tweet is posted, but no output. logging is not captured by STDOUT normally
     - add `sys.stdout` to `StreamHandler`

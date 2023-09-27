@@ -266,14 +266,13 @@ def write_flight_tweet(
     logger.info("DB query executed")
     delays_in_sentences = "\n" + "\n".join(
         [
-            f"{d[flight_num]}: {d[d_port]} to {d[a_port]}, {int(d[a_delay])} min"
-            for d in delays
+            f"{i+1} {d[flight_num]}: {d[d_port]} to {d[a_port]}, {int(d[a_delay])} min"
+            for i, d in enumerate(delays)
         ]
     )
     pt1 = f"{num_delay} MH flights were late on {str_date}"
     pt2 = f"by an average of {avg_delay:.0f} min."
-    pt3 = f"Most delayed{delays_in_sentences}"
-    tweet = " ".join([pt1, pt2, pt3])
+    tweet = " ".join([pt1, pt2, delays_in_sentences])
     if (tweet_chars := len(tweet)) > 280:
         logging.warning(f"Truncating tweet from {tweet_chars} to 280 chars")
         tweet = tweet[:280]

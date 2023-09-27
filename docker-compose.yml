@@ -1,0 +1,25 @@
+services:
+  app:
+    container_name: asean-flight-logs
+    image: asean-flight-logs:dev
+    build:
+      context: .
+    command: ["--arrival_date", "2023-09-16", 
+                "--data_dir", "/data",
+                "--template_dir", "/templates",
+                "--local_json",
+                "--local_tweet",
+                "--loglevel", "debug"]
+    env_file:
+      - ./.env
+    volumes:
+      - type: bind
+        source: ./data
+        target: /data
+      - type: bind
+        source: ./templates
+        target: /templates
+      - type: bind
+        source: ./asean_flight_logs/main.py
+        target: /app/main.py
+        
