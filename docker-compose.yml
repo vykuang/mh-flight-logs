@@ -1,15 +1,15 @@
 services:
   app:
-    container_name: asean-flight-logs
+    container_name: flight-logs-container
     image: asean-flight-logs:dev
     build:
       context: .
-    command: ["--arrival_date", "2023-09-16", 
+    command: ["--arrival_date", "2023-09-26", 
                 "--data_dir", "/data",
                 "--template_dir", "/templates",
                 "--local_json",
                 "--local_tweet",
-                "--loglevel", "debug"]
+                "--loglevel", "info"]
     env_file:
       - ./.env
     volumes:
