@@ -1,5 +1,5 @@
 #! /usr/bin/env sh
-# Usage: docker-up.sh 
+# Usage: run.sh 
 
 docker compose up
 exit_code=$?
