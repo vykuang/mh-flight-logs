@@ -1,14 +1,15 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 import os
 import requests
 from urllib3.util import Retry
 from requests import Session
 from requests.adapters import HTTPAdapter
+from requests.exceptions import ReadTimeout
 import sqlite3
 from sqlite3 import ProgrammingError
 import json
 from pathlib import Path
-from datetime import date
+from datetime import date, datetime
 from time import sleep
 from collections.abc import MutableMapping
 import tweepy
@@ -82,14 +83,17 @@ def get_all_delays(
             "airline_name": airline,
             "min_delay_arr": min_delay,
         }
-        responses.append(
-            sesh.get(
-                url=FLIGHT_API_URL,
-                params=params,
-                timeout=10.0,
-            ).json()
-        )
-        logger.debug(f"retrieved {retrieved}th to {retrieved + limit}th")
+        try:
+            responses.append(
+                sesh.get(
+                    url=FLIGHT_API_URL,
+                    params=params,
+                    timeout=30.0,
+                ).json()
+            )
+            logger.debug(f"retrieved {retrieved}th to {retrieved + limit}th")
+        except ReadTimeout as e:
+            logger.error(f"Unable to retrieve {retrieved}th to {retrieved + limit}th:\n{e}")
         # save response
         json_path = write_local_json(
             responses[-1], json_dir=json_dir, str_date=str_date, offset=retrieved
@@ -314,7 +318,8 @@ def main(
     logger.setLevel(num_level)
     logger.addHandler(logging.FileHandler(data_dir / "debug.log"))
     logger.debug(f"log level: {loglevel}")
-    logger.info(f"Use local json: {local_json}")
+    logger.info(f"Execution time: {datetime.now()}")
+    logger.info(f"Searching flights from {str_date}\nUse local json: {local_json}")
     # flatten the nested dicts in the response jsons
     json_dir = data_dir / "responses"
     if local_json:
