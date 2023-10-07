@@ -1,4 +1,6 @@
 # local data
+*.db
+*.log
 *.json
 data/
 .env

@@ -1,5 +1,5 @@
 # slim doesn't have curl
-FROM python:3.11-buster as builder
+FROM python:3.11 as builder
 
 ENV POETRY_VERSION=1.4.1 \
     POETRY_NO_INTERACTION=1 \
@@ -25,4 +25,4 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 #COPY asean_flight_logs/main.py ./main.py
 WORKDIR /app
 VOLUME [ "/data", "/templates" ]
-ENTRYPOINT [ "./main.py" ]
+ENTRYPOINT [ "python", "main.py" ]
