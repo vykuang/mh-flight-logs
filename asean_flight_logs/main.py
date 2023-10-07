@@ -2,7 +2,7 @@
 import os
 import requests
 from urllib3.util import Retry
-from requests import Session
+from requests import Session, HTTPError
 from requests.adapters import HTTPAdapter
 from requests.exceptions import ReadTimeout
 import sqlite3
@@ -61,16 +61,17 @@ def get_all_delays(
     airline: str = "Malaysia Airlines",
     min_delay: int = 1,
     str_date: str = str(date.today()),
-    flight_api_url="http://api.aviationstack.com/v1/flights",
 ):
     sesh = Session()
-    retries = Retry(
-        total=3,
-        backoff_factor=0.1,
-        status_forcelist=[502, 503, 504],
-        allowed_methods={"POST"},
+    adapter = HTTPAdapter(
+        max_retries=Retry(
+            total=3,
+            backoff_factor=0.1,
+            status_forcelist=[500, 502, 503, 504],
+            # allowed_methods={"POST"},
+        )
     )
-    sesh.mount(AV_API_URL, HTTPAdapter(max_retries=retries))
+    sesh.mount(AV_API_URL, adapter)
     responses = []
     retrieved = total = 0
     while not total or retrieved < total:
@@ -84,16 +85,20 @@ def get_all_delays(
             "min_delay_arr": min_delay,
         }
         try:
-            responses.append(
-                sesh.get(
+            response = sesh.get(
                     url=FLIGHT_API_URL,
                     params=params,
                     timeout=30.0,
-                ).json()
-            )
-            logger.debug(f"retrieved {retrieved}th to {retrieved + limit}th")
+                )
+            response.raise_for_status()
+        except HTTPError as exc:
+            logger.error(f"HTTP Error: \n{exc}")
+            
         except ReadTimeout as e:
-            logger.error(f"Unable to retrieve {retrieved}th to {retrieved + limit}th:\n{e}")
+            logger.error(f"Timeout retrieving {retrieved}th to {retrieved + limit}th:\n{e}")
+        # save response
+        logger.debug(f"retrieved {retrieved}th to {retrieved + limit}th")
+        responses.append(response.json())
         # save response
         json_path = write_local_json(
             responses[-1], json_dir=json_dir, str_date=str_date, offset=retrieved
