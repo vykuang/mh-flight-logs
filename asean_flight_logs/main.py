@@ -273,6 +273,7 @@ def write_flight_tweet(
         curs = db_conn.execute(delayed_sql)
         delays = curs.fetchall()
     logger.info("DB query executed")
+    logger.debug("Query result:\n", delays)
     delays_in_sentences = "\n" + "\n".join(
         [
             f"{i+1} {d[flight_num]}: {d[d_port]} to {d[a_port]}, {int(d[a_delay])} min"

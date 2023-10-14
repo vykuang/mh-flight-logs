@@ -5,12 +5,12 @@ services:
     build:
       context: .
     command: [
-      #"--arrival_date", "2023-09-26", 
+      "--arrival_date", "2023-10-12", 
       "--data_dir", "/data",
       "--template_dir", "/templates",
-      #"--local_json",
-      #"--local_tweet",
-      "--loglevel", "info"
+      "--local_json",
+      "--local_tweet",
+      "--loglevel", "debug"
     ]
     env_file:
       - ./.env
