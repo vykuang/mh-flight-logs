@@ -110,46 +110,6 @@ def get_all_delays(
     return responses
 
 
-def json_flatten(data: dict, parent_key="", sep="_"):
-    """
-    Normalizes json, if nested
-    """
-    items = []
-    for key, val in data.items():
-        new_key = parent_key + sep + key if parent_key else key
-        if isinstance(val, MutableMapping):
-            items.extend(json_flatten(val, parent_key=new_key, sep=sep).items())
-        else:
-            items.append((new_key, val))
-
-    # creates {key: val} from (key, val) tuple
-    return dict(items)
-
-
-def issubstring(text: str, checklist, sep="__") -> bool:
-    """
-    Returns True for overlapped keys
-    """
-    for check in checklist:
-        if text + sep in check:
-            return True
-    return False
-
-
-def find_json_schema(entries: list[dict]) -> list:
-    """
-    Returns all non-overlapping fields from the json schema by
-    iterating over all fields in each flight entry,
-    and creating a unique set
-    """
-    fields = set()
-    for entry in entries:
-        fields.update(entry.keys())
-
-    fields_uniq = [field for field in fields if not issubstring(field, fields)]
-    return fields_uniq
-
-
 def create_table(
     schema: list,
     db_conn: sqlite3.Connection,
