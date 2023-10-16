@@ -86,16 +86,18 @@ def get_all_delays(
         }
         try:
             response = sesh.get(
-                    url=FLIGHT_API_URL,
-                    params=params,
-                    timeout=30.0,
-                )
+                url=FLIGHT_API_URL,
+                params=params,
+                timeout=30.0,
+            )
             response.raise_for_status()
         except HTTPError as exc:
             logger.error(f"HTTP Error: \n{exc}")
-            
+
         except ReadTimeout as e:
-            logger.error(f"Timeout retrieving {retrieved}th to {retrieved + limit}th:\n{e}")
+            logger.error(
+                f"Timeout retrieving {retrieved}th to {retrieved + limit}th:\n{e}"
+            )
         # save response
         logger.debug(f"retrieved {retrieved}th to {retrieved + limit}th")
         responses.append(response.json())

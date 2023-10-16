@@ -25,3 +25,8 @@ ipython-sql = "^0.5.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[sqlite]
+db_name = "flights"
+tbl_name = "import_flight_records"
+json_col = "flights_json"

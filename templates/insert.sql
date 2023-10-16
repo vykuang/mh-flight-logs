@@ -1,0 +1,1 @@
+INSERT INTO {{tbl_name}} ({{json_col}}) VALUES ( ? );
