@@ -1,14 +1,14 @@
 WITH RECURSIVE 
-delays(flight_date, start, dest, delay) as (
+delays(flight_num, start, dest, delay) as (
     SELECT
-        json_extract({{json_col}},'$.flight_date') as flight_date,
+        json_extract({{json_col}},'$.flight.iata') as flight_num,
         json_extract({{json_col}},'$.departure.airport') as start,
         json_extract({{json_col}},'$.arrival.airport') as dest,
-        CAST(json_extract({{json_col}},'$.arrival.delay') AS INTEGER) as delay
+        CAST(arr_delay AS INTEGER) as delay
     FROM {{tbl_name}}
 )
 SELECT
-    flight_date,
+    flight_num,
     REPLACE(
     REPLACE(
     REPLACE(start, ' International Airport', ''), 
