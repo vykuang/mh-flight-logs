@@ -18,6 +18,13 @@ import logging
 from sys import stdout
 import jinja2
 
+logging.basicConfig(
+    format="%(asctime)s [%(levelname)s] %(funcName)s: %(message)s",
+    datefmt="%Y/%m/%d %H:%M:%S",
+    handlers=[logging.StreamHandler(stdout)],
+)
+logger = logging.getLogger(__name__)
+
 AV_API_KEY = os.getenv("AVIATION_API_KEY", "")
 AV_API_URL = "http://api.aviationstack.com/v1/"
 FLIGHT_API_URL = AV_API_URL + "flights"
@@ -27,12 +34,13 @@ TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET")
 TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
 TWITTER_ACCESS_SECRET = os.getenv("TWITTER_ACCESS_SECRET")
 
-logging.basicConfig(
-    format="%(asctime)s [%(levelname)s] %(funcName)s: %(message)s",
-    datefmt="%Y/%m/%d %H:%M:%S",
-    handlers=[logging.StreamHandler(stdout)],
-)
-logger = logging.getLogger(__name__)
+toml_path = Path("../pyproject.toml")
+with open(toml_path, "rb") as f:
+    config = tomllib.load(f)
+
+DB_NAME = config["sqlite"]["db_name"]
+TBL_NAME = config["sqlite"]["tbl_name"]
+JSON_COL = config["sqlite"]["json_col"]
 
 
 def write_local_json(
@@ -60,7 +68,7 @@ def get_all_delays(
     limit: int = 100,
     airline: str = "Malaysia Airlines",
     min_delay: int = 1,
-    str_date: str = str(date.today()),
+    str_date: str = str(datetime.now(tz=timezone.utc).date() - timedelta(days=1)),
 ):
     sesh = Session()
     adapter = HTTPAdapter(
@@ -74,6 +82,7 @@ def get_all_delays(
     sesh.mount(AV_API_URL, adapter)
     responses = []
     retrieved = total = 0
+    logger.info(f"Retrieving delayed flights for {str_date}")
     while not total or retrieved < total:
         sleep(0.5)
         logger.info(f"retrieving {retrieved}th to {retrieved + limit}th")
@@ -99,46 +108,47 @@ def get_all_delays(
                 f"Timeout retrieving {retrieved}th to {retrieved + limit}th:\n{e}"
             )
         # save response
+        response = response.json()
         logger.debug(f"retrieved {retrieved}th to {retrieved + limit}th")
-        responses.append(response.json())
-        # save response
         json_path = write_local_json(
-            responses[-1], json_dir=json_dir, str_date=str_date, offset=retrieved
+            response, json_dir=json_dir, str_date=str_date, offset=retrieved
         )
-        retrieved += responses[-1]["pagination"]["count"]
+        responses.extend(response["data"])
+        retrieved += response["pagination"]["count"]
         if not total:
-            total = responses[0]["pagination"]["total"]
+            # First request; get total count
+            total = response["pagination"]["total"]
             logger.info(f"Total records count: {total}")
+            if total == 0:
+                # prevent infinite loop if there are no records retrieved
+                logger.error("Zero records retrieved; exiting")
+                break
     return responses
 
 
-def create_table(
-    schema: list,
+def execute_template_sql(
     db_conn: sqlite3.Connection,
-    tbl_name: str = "import_flight_records",
-    sep="__",
+    env: jinja2.Environment,
+    template: str,
+    params: dict,
+    data: list = None,
 ):
     """
-    Creates the table in sqlite if it doesn't already exist
+    Renders the jinja templated sql and executes,
+    returning results if any
     """
-    logger.debug("Executing DDL")
-    pk = [
-        ["flight", "iata"],
-        ["departure", "iata"],
-        ["departure", "scheduled"],
-        ["arrival", "iata"],
-    ]
-    pk = [sep.join(field) for field in pk]
-    if not all([key in schema for key in pk]):
-        raise ValueError(f"one of primary keys: {pk} not in schema list")
-
-    ddl = f"""
-    CREATE TABLE IF NOT EXISTS {tbl_name} (
-        {", ".join([f"{field} TEXT DEFAULT NULL" for field in schema])},
-        PRIMARY KEY ({", ".join(pk)})
-    )"""
-    db_conn.execute(ddl)
-    logger.debug("DDL executed")
+    sql = env.get_template(template).render(params)
+    logger.debug(f"rendered SQL:\n{sql}")
+    with db_conn:
+        if data:
+            db_conn.executemany(sql, data)
+            return None
+        else:
+            # executescript did not return any results
+            if "CREATE" in sql or "INSERT INTO" in sql:
+                db_conn.executescript(sql)
+            else:
+                return db_conn.execute(sql)
 
 
 def dict_factory(cursor, row):
@@ -183,73 +193,6 @@ def upsert_entries(
     except ProgrammingError as e:
         logging.critical(e)
     logger.info(f"{len(entries)} entries UPSERTed into database")
-
-
-def write_flight_tweet(
-    db_conn: sqlite3.Connection,
-    tbl_name: str = "import_flight_records",
-    str_date: str = str(date.today()),
-    sep: str = "__",
-    num_delay: int = 3,
-    template_dir: Path = Path("templates"),
-) -> str:
-    """
-    Queries the flight records database to write the tweet
-    Prepared queries makes some assumption about the table schema
-    - follows aviationstack flights endpoint
-    - flattened, with the same sep character
-
-    Returns a string populated with the query result
-    """
-    # defining column names inside db for populating the tweet
-    flight_num = f"flight{sep}iata"
-    a_port = f"arrival{sep}airport"
-    a_delay = f"arrival{sep}delay"
-    a_sched = f"arrival{sep}scheduled"
-    d_port = f"departure{sep}airport"
-
-    # params to render the query template
-    params = dict(
-        flight_num=flight_num,
-        a_port=a_port,
-        a_delay=a_delay,
-        a_sched=a_sched,
-        d_port=d_port,
-        num_delay=3,
-        str_date=str_date,
-        tbl_name=tbl_name,
-    )
-    logger.debug("Instantiating jinja environment")
-    env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
-    logger.debug(
-        f"Searching for sql templates from {(Path.cwd() / template_dir).resolve()}"
-    )
-    agg_sql = env.get_template("agg.sql").render(params)
-    logger.debug(f"rendered agg_sql:\n{agg_sql}")
-    delayed_sql = env.get_template("delayed.sql").render(params)
-    logger.debug(f"rendered delayed_sql:\n{delayed_sql}")
-    logger.debug("Querying database...")
-    with db_conn:
-        curs = db_conn.execute(agg_sql)
-        num_delay, avg_delay = curs.fetchall()[0].values()
-        curs = db_conn.execute(delayed_sql)
-        delays = curs.fetchall()
-    logger.info("DB query executed")
-    logger.debug("Query result:\n", delays)
-    delays_in_sentences = "\n" + "\n".join(
-        [
-            f"{i+1} {d[flight_num]}: {d[d_port]} to {d[a_port]}, {int(d[a_delay])} min"
-            for i, d in enumerate(delays)
-        ]
-    )
-    pt1 = f"{num_delay} MH flights were late on {str_date}"
-    pt2 = f"by an average of {avg_delay:.0f} min."
-    tweet = " ".join([pt1, pt2, delays_in_sentences])
-    if (tweet_chars := len(tweet)) > 280:
-        logging.warning(f"Truncating tweet from {tweet_chars} to 280 chars")
-        tweet = tweet[:280]
-    logger.debug(f"tweet length: {len(tweet)}")
-    return tweet
 
 
 def main(
@@ -297,33 +240,38 @@ def main(
             logger.debug(f"looking for {json_file}")
             with open(json_file) as j:
                 flight_page = json.load(j)
-                flat = [
-                    json_flatten(nested, sep="__") for nested in flight_page["data"]
-                ]
-                entries.extend(flat)
+                entries.extend(flight_page["data"])
 
     else:
         logger.info("Requesting flight API")
-        responses = get_all_delays(str_date=str_date, json_dir=json_dir)
-        # collecting records from all responses
-        entries = [
-            json_flatten(nested, sep="__")
-            for response in responses
-            for nested in response["data"]
-        ]
+        entries = get_all_delays(str_date=str_date, json_dir=json_dir)
 
-    # creating schema from json fields
-    schema = find_json_schema(entries)
-    logger.debug(f"number of fields: {len(schema)}\nschema:\n{schema}")
+    params = dict(
+        tbl_name=TBL_NAME,
+        json_col=JSON_COL,
+    )
+    # instantiate db conn and jinja env
+    env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
     db_path = data_dir / "flights.db"
     logger.debug(f"connecting to sqlite db @ {db_path}")
+    db_exists = db_path.exists()
     db_conn = sqlite3.connect(db_path)
+    if not db_exists:
+        logger.info(f"{db_path} does not exist, initializing...")
+        execute_template_sql(db_conn, env, "create.sql", params)
 
-    create_table(schema, db_conn)
+    # UPSERT data
+    # restructure as list of tuples
+    flights = [(json.dumps(flight),) for flight in responses]
+    # db_conn.executemany(f"INSERT OR REPLACE INTO {TBL_NAME} ({JSON_COL}) VALUES( ? )", flights)
+    execute_template_sql(db_conn, env, "insert.sql", params, flights)
     # rows will be returned as a dict, with col names as keys
     db_conn.row_factory = dict_factory
-    upsert_entries(entries, db_conn)
 
+    logger.debug("Querying database...")
+    params = dict(tbl_name=TBL_NAME, json_col=JSON_COL, str_date=str_date)
+    agg = execute_template_sql(db_conn, env, "agg.sql", params)
+    delays = execute_template_sql(db_conn, env, "delayed_json.sql", params)
     # tweet
     oauth1_client = tweepy.Client(
         consumer_key=TWITTER_API_KEY,
@@ -331,13 +279,26 @@ def main(
         access_token=TWITTER_ACCESS_TOKEN,
         access_token_secret=TWITTER_ACCESS_SECRET,
     )
-    payload = write_flight_tweet(db_conn, str_date=str_date, template_dir=template_dir)
+    total, num_delay, avg_delay = next(agg).values()
+    pt1 = f"{num_delay}/{total} MH flights were late on {str_date}"
+    pt2 = f"by an average of {avg_delay:.0f} min."
+    delays_in_sentences = "\n" + "\n".join(
+        [
+            f"{i+1} {d['flight_num']}: {d['start']} to {d['dest']}, {d['delay']} min"
+            for i, d in enumerate(delays)
+        ]
+    )
+    tweet = " ".join([pt1, pt2, delays_in_sentences])
+    if (tweet_chars := len(tweet)) > 280:
+        logging.warning(f"Truncating tweet from {tweet_chars} to 280 chars")
+        tweet = tweet[:280]
+    logger.debug(f"tweet length: {len(tweet)}")
     db_conn.close()
     if local_tweet:
-        logger.info(f"offline tweet:\n{payload}")
+        logger.info(f"offline tweet:\n{tweet}")
     else:
         try:
-            t_response = oauth1_client.create_tweet(text=payload, user_auth=True)
+            t_response = oauth1_client.create_tweet(text=tweet, user_auth=True)
             logger.info(
                 f"link: https://twitter.com/user/status/{t_response.data['id']}"
             )

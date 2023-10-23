@@ -1,7 +1,7 @@
 WITH RECURSIVE 
     t(flight_date, total) AS (
         SELECT 
-            DATE(arr_time) flight_date,
+            DATE(DATETIME(arr_time)) flight_date,
             COUNT(*) total 
         FROM {{tbl_name}}
         WHERE flight_date = '{{str_date}}')
