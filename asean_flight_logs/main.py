@@ -34,7 +34,7 @@ TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET")
 TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
 TWITTER_ACCESS_SECRET = os.getenv("TWITTER_ACCESS_SECRET")
 
-toml_path = Path("../pyproject.toml")
+toml_path = Path("pyproject.toml")
 with open(toml_path, "rb") as f:
     config = tomllib.load(f)
 
@@ -63,12 +63,12 @@ def write_local_json(
     return local_json_path
 
 
-def get_all_delays(
+def get_all_delays(    
+    str_date: str,
     json_dir: str,
     limit: int = 100,
     airline: str = "Malaysia Airlines",
     min_delay: int = 1,
-    str_date: str = str(datetime.now(tz=timezone.utc).date() - timedelta(days=1)),
 ):
     sesh = Session()
     adapter = HTTPAdapter(
@@ -196,7 +196,7 @@ def upsert_entries(
 
 
 def main(
-    str_date: str = str(date.today()),
+    str_date: str,
     data_dir: Path = Path("data"),
     template_dir: Path = Path("templates"),
     local_json: bool = False,
@@ -316,9 +316,9 @@ if __name__ == "__main__":
     opt = parser.add_argument
     opt(
         "-d",
-        "--arrival_date",
+        "--flight_date",
         type=str,
-        default=str(date.today()),
+        default=str(datetime.now(tz=timezone.utc).date() - timedelta(days=1)),
         help="Date in yyyy-mm-dd format to look for delayed flights; best with --local_json",
     )
     opt(
@@ -353,7 +353,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     main(
-        args.arrival_date,
+        args.flight_date,
         args.data_dir,
         args.template_dir,
         args.local_json,

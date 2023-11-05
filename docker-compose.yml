@@ -5,7 +5,7 @@ services:
     build:
       context: .
     command: [
-      "--arrival_date", "2023-10-12", 
+      "--flight_date", "2023-10-23", 
       "--data_dir", "/data",
       "--template_dir", "/templates",
       "--local_json",
@@ -24,4 +24,6 @@ services:
       - type: bind
         source: ./asean_flight_logs/main.py
         target: /app/main.py
-        
+      - type: bind
+        source: ./pyproject.toml
+        target: /app/pyproject.toml
