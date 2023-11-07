@@ -9,7 +9,7 @@ import sqlite3
 from sqlite3 import ProgrammingError
 import json
 from pathlib import Path
-from datetime import date, datetime
+from datetime import date, datetime, timezone, timedelta
 from time import sleep
 from collections.abc import MutableMapping
 import tweepy
@@ -17,6 +17,7 @@ import argparse
 import logging
 from sys import stdout
 import jinja2
+import tomllib
 
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(funcName)s: %(message)s",
@@ -63,7 +64,7 @@ def write_local_json(
     return local_json_path
 
 
-def get_all_delays(    
+def get_all_delays(
     str_date: str,
     json_dir: str,
     limit: int = 100,
@@ -91,7 +92,7 @@ def get_all_delays(
             "offset": retrieved,
             "limit": limit,
             "airline_name": airline,
-            "min_delay_arr": min_delay,
+            # "min_delay_arr": min_delay,
         }
         try:
             response = sesh.get(
@@ -262,7 +263,7 @@ def main(
 
     # UPSERT data
     # restructure as list of tuples
-    flights = [(json.dumps(flight),) for flight in responses]
+    flights = [(json.dumps(flight),) for flight in entries]
     # db_conn.executemany(f"INSERT OR REPLACE INTO {TBL_NAME} ({JSON_COL}) VALUES( ? )", flights)
     execute_template_sql(db_conn, env, "insert.sql", params, flights)
     # rows will be returned as a dict, with col names as keys
@@ -324,13 +325,13 @@ if __name__ == "__main__":
     opt(
         "--data_dir",
         type=Path,
-        default=Path("data"),
+        default=Path("/data"),
         help="Directory to store json responses and sqlite db",
     )
     opt(
         "--template_dir",
         type=Path,
-        default=Path("templates"),
+        default=Path("/templates"),
         help="Directory for sql templates",
     )
     opt(
