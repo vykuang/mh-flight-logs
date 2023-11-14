@@ -1,6 +1,7 @@
 CREATE TABLE {{tbl_name}}(
     {{json_col}} JSON,
     flight_iata_number TEXT GENERATED ALWAYS AS (JSON_EXTRACT({{json_col}}, '$.flight.iata')) VIRTUAL,
+    flight_date TEXT GENERATED ALWAYS AS (JSON_EXTRACT({{json_col}}, '$.flight_date')) VIRTUAL,
     dep_airport_code TEXT GENERATED ALWAYS AS (JSON_EXTRACT({{json_col}}, '$.departure.iata')) VIRTUAL,
     arr_airport_code TEXT GENERATED ALWAYS AS (JSON_EXTRACT({{json_col}}, '$.arrival.iata')) VIRTUAL,
     arr_time TEXT GENERATED ALWAYS AS (JSON_EXTRACT({{json_col}}, '$.arrival.scheduled')) VIRTUAL,

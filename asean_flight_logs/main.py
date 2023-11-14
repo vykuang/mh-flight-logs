@@ -9,7 +9,7 @@ import sqlite3
 from sqlite3 import ProgrammingError
 import json
 from pathlib import Path
-from datetime import date, datetime
+from datetime import date, datetime, timezone, timedelta
 from time import sleep
 from collections.abc import MutableMapping
 import tweepy
@@ -17,6 +17,7 @@ import argparse
 import logging
 from sys import stdout
 import jinja2
+import tomllib
 
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(funcName)s: %(message)s",
@@ -46,7 +47,7 @@ JSON_COL = config["sqlite"]["json_col"]
 def write_local_json(
     api_response: dict,
     json_dir: Path,
-    str_date: str = str(date.today()),
+    str_date: str,
     offset: int = 0,
     limit: int = 100,
 ):
@@ -63,7 +64,7 @@ def write_local_json(
     return local_json_path
 
 
-def get_all_delays(    
+def get_all_delays(
     str_date: str,
     json_dir: str,
     limit: int = 100,
@@ -91,7 +92,7 @@ def get_all_delays(
             "offset": retrieved,
             "limit": limit,
             "airline_name": airline,
-            "min_delay_arr": min_delay,
+            # "min_delay_arr": min_delay,
         }
         try:
             response = sesh.get(
@@ -162,39 +163,6 @@ def dict_factory(cursor, row):
     return {field: val for field, val in zip(fields, row)}
 
 
-def upsert_entries(
-    entries: dict,
-    db_conn: sqlite3.Connection,
-    tbl_name: str = "import_flight_records",
-):
-    """
-    UPSERT data into the import table
-    There is no UPSERT function that replaces INSERT;
-    rather it's an ON CONFLICT DO clause that can be added to an INSERT
-    statement to handle unique key constraints
-    """
-    # retrieve the table column order for correct insertion
-    with db_conn:
-        curs = db_conn.execute(f"pragma table_info('{tbl_name}')")
-        tbl_info = curs.fetchall()
-    col_names = [col_info["name"] for col_info in tbl_info]
-    logger.debug(f"{len(col_names)} columns retrieved from tbl_info")
-    # inserting nulls where the field is empty
-    entries_expanded = (
-        {field: entry.get(field) for field in col_names} for entry in entries
-    )
-    cols_placeholder = ", ".join([f":{field}" for field in col_names])
-    try:
-        with db_conn:
-            db_conn.executemany(
-                f"INSERT OR REPLACE INTO {tbl_name} VALUES({cols_placeholder})",
-                entries_expanded,
-            )
-    except ProgrammingError as e:
-        logging.critical(e)
-    logger.info(f"{len(entries)} entries UPSERTed into database")
-
-
 def main(
     str_date: str,
     data_dir: Path = Path("data"),
@@ -206,7 +174,7 @@ def main(
     """
     Tweets how late malaysia airline was today
     Searches through all flights scheduled to arrive today
-    Scheduled to run daily at 23:50:00
+    Scheduled to run daily at 23:50:00 UTC
 
     Parameters:
     str_date: str
@@ -219,6 +187,9 @@ def main(
     local_json: bool
         if True, program will look for json responses in data_dir / "responses"
         instead of requesting API
+
+    local_tweet: bool
+        if True, prints to terminal instead of posting to twitter
 
     loglevel: str
         one of default log levels; lower or uppercase accepted
@@ -262,7 +233,7 @@ def main(
 
     # UPSERT data
     # restructure as list of tuples
-    flights = [(json.dumps(flight),) for flight in responses]
+    flights = [(json.dumps(flight),) for flight in entries]
     # db_conn.executemany(f"INSERT OR REPLACE INTO {TBL_NAME} ({JSON_COL}) VALUES( ? )", flights)
     execute_template_sql(db_conn, env, "insert.sql", params, flights)
     # rows will be returned as a dict, with col names as keys
@@ -288,7 +259,7 @@ def main(
             for i, d in enumerate(delays)
         ]
     )
-    tweet = " ".join([pt1, pt2, delays_in_sentences])
+    tweet = " ".join([pt1, pt2, delays_in_sentences]).replace("None", "N/A")
     if (tweet_chars := len(tweet)) > 280:
         logging.warning(f"Truncating tweet from {tweet_chars} to 280 chars")
         tweet = tweet[:280]
@@ -324,13 +295,13 @@ if __name__ == "__main__":
     opt(
         "--data_dir",
         type=Path,
-        default=Path("data"),
+        default=Path("/data"),
         help="Directory to store json responses and sqlite db",
     )
     opt(
         "--template_dir",
         type=Path,
-        default=Path("templates"),
+        default=Path("/templates"),
         help="Directory for sql templates",
     )
     opt(

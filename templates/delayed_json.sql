@@ -6,7 +6,7 @@ delays(flight_num, start, dest, delay) as (
         json_extract({{json_col}},'$.arrival.airport') as dest,
         CAST(arr_delay AS INTEGER) as delay
     FROM {{tbl_name}}
-    WHERE json_extract({{json_col}},'$.flight_date') = '{{str_date}}'
+    WHERE flight_date = '{{str_date}}'
 )
 SELECT
     flight_num,

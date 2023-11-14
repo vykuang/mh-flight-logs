@@ -1,7 +1,7 @@
 WITH RECURSIVE 
     t(flight_date, total) AS (
         SELECT 
-            DATE(DATETIME(arr_time)) flight_date,
+            DATE(flight_date) flight_date,
             COUNT(*) total 
         FROM {{tbl_name}}
         WHERE flight_date = '{{str_date}}')
@@ -10,5 +10,5 @@ SELECT
     COUNT(arr_delay) num_delayed,
     AVG(CAST(arr_delay AS INTEGER)) avg_delay
 FROM {{tbl_name}} d LEFT JOIN t
-WHERE DATE(d.arr_time) = t.flight_date
+WHERE DATE(d.flight_date) = t.flight_date
 AND arr_delay > 0;
