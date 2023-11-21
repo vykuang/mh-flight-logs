@@ -164,6 +164,7 @@ def dict_factory(cursor, row):
 
 
 def main(
+    airline: str,
     str_date: str,
     data_dir: Path = Path("data"),
     template_dir: Path = Path("templates"),
@@ -172,11 +173,14 @@ def main(
     loglevel: str = "info",
 ):
     """
-    Tweets how late malaysia airline was today
-    Searches through all flights scheduled to arrive today
-    Scheduled to run daily at 23:50:00 UTC
+    Tweets how late the queried airline was today
+    Searches through all flights scheduled yesterday based on UTC
+    Scheduled to run daily at 0:01 UTC
 
     Parameters:
+    airline: str
+        two character IATA code for the specified airline
+
     str_date: str
         date in yyyy-mm-dd format
 
@@ -286,6 +290,12 @@ if __name__ == "__main__":
     )
     opt = parser.add_argument
     opt(
+        "--airline",
+        type=str,
+        default="mh",
+        help="Two-character IATA code for the specified airline, e.g. MH or AK",
+    )
+    opt(
         "-d",
         "--flight_date",
         type=str,
@@ -324,6 +334,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     main(
+        args.airline,
         args.flight_date,
         args.data_dir,
         args.template_dir,
