@@ -7,6 +7,7 @@ delays(flight_num, start, dest, delay) as (
         CAST(arr_delay AS INTEGER) as delay
     FROM {{tbl_name}}
     WHERE flight_date = '{{str_date}}'
+    AND substr(flight_iata_number, 1, 2) = '{{airline_iata}}'
 )
 SELECT
     flight_num,

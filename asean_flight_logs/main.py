@@ -206,7 +206,7 @@ def main(
     logger.info(f"Execution time: {datetime.now()}")
     logger.info(f"Searching flights from {str_date}\nUse local json: {local_json}")
     # flatten the nested dicts in the response jsons
-    json_dir = data_dir / "responses" / airline
+    json_dir = data_dir / "responses" / airline_iata.lower()
     if local_json:
         entries = []
         json_paths = json_dir.glob(f"flight-{str_date}-*.json")
@@ -245,18 +245,13 @@ def main(
     db_conn.row_factory = dict_factory
 
     logger.debug("Querying database...")
-    params = dict(tbl_name=TBL_NAME, json_col=JSON_COL, str_date=str_date)
+    params.update({"str_date": str_date})
+    params.update({"airline_iata": airline_iata})
     agg = execute_template_sql(db_conn, env, "agg.sql", params)
     delays = execute_template_sql(db_conn, env, "delayed_json.sql", params)
-    # tweet
-    oauth1_client = tweepy.Client(
-        consumer_key=TWITTER_API_KEY,
-        consumer_secret=TWITTER_API_SECRET,
-        access_token=TWITTER_ACCESS_TOKEN,
-        access_token_secret=TWITTER_ACCESS_SECRET,
-    )
+
     total, num_delay, avg_delay = next(agg).values()
-    pt1 = f"{num_delay}/{total} MH flights were late on {str_date}"
+    pt1 = f"{num_delay}/{total} {airline_iata} flights were late on {str_date}"
     pt2 = f"by an average of {avg_delay:.0f} min."
     delays_in_sentences = "\n" + "\n".join(
         [
@@ -274,6 +269,13 @@ def main(
         logger.info(f"offline tweet:\n{tweet}")
     else:
         try:
+            # tweet
+            oauth1_client = tweepy.Client(
+                consumer_key=TWITTER_API_KEY,
+                consumer_secret=TWITTER_API_SECRET,
+                access_token=TWITTER_ACCESS_TOKEN,
+                access_token_secret=TWITTER_ACCESS_SECRET,
+            )
             t_response = oauth1_client.create_tweet(text=tweet, user_auth=True)
             logger.info(
                 f"link: https://twitter.com/user/status/{t_response.data['id']}"
@@ -292,7 +294,7 @@ if __name__ == "__main__":
     opt = parser.add_argument
     opt(
         "--airline_iata",
-        type=str,
+        type=str.upper,
         default="mh",
         help="Two-character IATA code for the specified airline, e.g. MH or AK",
     )

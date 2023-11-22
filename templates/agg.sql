@@ -1,14 +1,16 @@
-WITH RECURSIVE 
-    t(flight_date, total) AS (
-        SELECT 
-            DATE(flight_date) flight_date,
-            COUNT(*) total 
+WITH RECURSIVE
+    filtered(airline, flight, delay) AS (
+        SELECT
+            substr(flight_iata_number, 1, 2) airline,
+            flight_iata_number flight,
+            arr_delay delay
         FROM {{tbl_name}}
-        WHERE flight_date = '{{str_date}}')
+        WHERE airline = '{{airline_iata}}'
+        AND flight_date = '{{str_date}}'
+    )
 SELECT 
-    t.total total,
-    COUNT(arr_delay) num_delayed,
-    AVG(CAST(arr_delay AS INTEGER)) avg_delay
-FROM {{tbl_name}} d LEFT JOIN t
-WHERE DATE(d.flight_date) = t.flight_date
-AND arr_delay > 0;
+    count(flight) total,
+    count(delay) num_delayed,
+    avg(delay) avg_delayed
+FROM filtered
+    

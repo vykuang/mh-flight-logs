@@ -80,10 +80,11 @@ Obtained from twitter developer account portal
         - Cathay Pacific
         - Air Asia
     - will need additional API keys for each airline to have enough quota
-        - each airline requires < 10 calls per day
-        - 1000 calls / 30 days / 10 calls per airline ~= 3 airlines
+        - each airline requires 10-20 calls per day
+        - 1000 calls / 30 days / 20 calls per airline ~= 1.5 airlines
 1. Change entrypoint from `./main.py` to `python main.py` to avoid permission error on rpi
 1. look for local files before fetching all offsets? this is beginning to stretch into the realm of an orchestrator
 1. improve logging - at least log what date we're looking for
 1. test if multiple retry is working
+   - check
 

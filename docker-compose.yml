@@ -1,6 +1,6 @@
 services:
-  app:
-    container_name: flight-logs-container
+  ak-flights:
+    container_name: ak-flight-logs
     image: asean-flight-logs:dev
     build:
       context: .
@@ -8,9 +8,10 @@ services:
       "--airline_iata", "ak",
       "--data_dir", "/data",
       "--template_dir", "/templates",
+      "--local_json", "--local_tweet",
       "--loglevel", "info"
     ]
-    env_file:
+    env_file: # use separate .env to store separate api key
       - ./.env
     volumes:
       - type: bind
@@ -25,3 +26,36 @@ services:
       - type: bind
         source: ./pyproject.toml
         target: /app/pyproject.toml
+  mh-flights:
+        container_name: mh-flight-logs
+        image: asean-flight-logs:dev
+        build:
+          context: .
+        command: [
+          "--airline_iata", "mh",
+          "--data_dir", "/data",
+          "--template_dir", "/templates",
+          "--local_tweet",
+          "--loglevel", "info"
+        ]
+        env_file:
+          - ./.env
+        volumes_from: # copies mount specs from another service
+          - ak-flights
+  sq-flights:
+        container_name: sq-flight-logs
+        image: asean-flight-logs:dev
+        build:
+          context: .
+        command: [
+          "--airline_iata", "sq",
+          "--data_dir", "/data",
+          "--template_dir", "/templates",
+          "--local_tweet",
+          "--loglevel", "info"
+        ]
+        env_file:
+          - ./.env
+        volumes_from: # copies mount specs from another service
+          - ak-flights
+
