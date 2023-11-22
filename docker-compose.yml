@@ -1,10 +1,11 @@
 services:
   app:
     container_name: flight-logs-container
-    image: asean-flight-logs:latest
+    image: asean-flight-logs:dev
     build:
       context: .
     command: [
+      "--airline_iata", "ak",
       "--data_dir", "/data",
       "--template_dir", "/templates",
       "--loglevel", "info"

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 import requests
 from urllib3.util import Retry
@@ -65,11 +65,10 @@ def write_local_json(
 
 
 def get_all_delays(
+    airline_iata: str,
     str_date: str,
-    json_dir: str,
+    json_dir: Path,
     limit: int = 100,
-    airline: str = "Malaysia Airlines",
-    min_delay: int = 1,
 ):
     sesh = Session()
     adapter = HTTPAdapter(
@@ -91,7 +90,7 @@ def get_all_delays(
             "access_key": AV_API_KEY,  # retrieved from .env, global scope
             "offset": retrieved,
             "limit": limit,
-            "airline_name": airline,
+            "airline_iata": airline_iata,
             # "min_delay_arr": min_delay,
         }
         try:
@@ -164,7 +163,7 @@ def dict_factory(cursor, row):
 
 
 def main(
-    airline: str,
+    airline_iata: str,
     str_date: str,
     data_dir: Path = Path("data"),
     template_dir: Path = Path("templates"),
@@ -207,7 +206,7 @@ def main(
     logger.info(f"Execution time: {datetime.now()}")
     logger.info(f"Searching flights from {str_date}\nUse local json: {local_json}")
     # flatten the nested dicts in the response jsons
-    json_dir = data_dir / "responses"
+    json_dir = data_dir / "responses" / airline
     if local_json:
         entries = []
         json_paths = json_dir.glob(f"flight-{str_date}-*.json")
@@ -219,7 +218,9 @@ def main(
 
     else:
         logger.info("Requesting flight API")
-        entries = get_all_delays(str_date=str_date, json_dir=json_dir)
+        entries = get_all_delays(
+            airline_iata=airline_iata, str_date=str_date, json_dir=json_dir
+        )
 
     params = dict(
         tbl_name=TBL_NAME,
@@ -290,7 +291,7 @@ if __name__ == "__main__":
     )
     opt = parser.add_argument
     opt(
-        "--airline",
+        "--airline_iata",
         type=str,
         default="mh",
         help="Two-character IATA code for the specified airline, e.g. MH or AK",
@@ -334,7 +335,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     main(
-        args.airline,
+        args.airline_iata,
         args.flight_date,
         args.data_dir,
         args.template_dir,
