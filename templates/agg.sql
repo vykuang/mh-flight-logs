@@ -8,9 +8,8 @@ WITH RECURSIVE
         WHERE airline = '{{airline_iata}}'
         AND flight_date = '{{str_date}}'
     )
-SELECT 
+SELECT
     count(flight) total,
     count(delay) num_delayed,
     avg(delay) avg_delayed
 FROM filtered
-    

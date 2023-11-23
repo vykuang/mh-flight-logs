@@ -1,5 +1,5 @@
 #! /usr/bin/env sh
-# Usage: run.sh 
+# Usage: run.sh
 PROJ_DIR=~/projects/mh-flight-logs
 docker compose --project-directory=$PROJ_DIR up
 exit_code=$?

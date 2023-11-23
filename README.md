@@ -87,4 +87,5 @@ Obtained from twitter developer account portal
 1. improve logging - at least log what date we're looking for
 1. test if multiple retry is working
    - check
-
+1. Save json to data lake
+1. separate `.env` for each service to hold different API keys, and potentially different twitter API keys

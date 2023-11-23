@@ -6,6 +6,7 @@ data/
 .env
 *.env
 nohup.out
+.ruff_cache/
 
 # notebook artifacts
 .ipynb_checkpoints/

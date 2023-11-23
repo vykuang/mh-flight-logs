@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 import os
-import requests
 from urllib3.util import Retry
 from requests import Session, HTTPError
 from requests.adapters import HTTPAdapter
 from requests.exceptions import ReadTimeout
 import sqlite3
-from sqlite3 import ProgrammingError
 import json
 from pathlib import Path
-from datetime import date, datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta
 from time import sleep
-from collections.abc import MutableMapping
 import tweepy
 import argparse
 import logging
@@ -56,7 +53,9 @@ def write_local_json(
     """
     if not json_dir.exists():
         json_dir.mkdir(parents=True)
-    local_json_path = json_dir / f"flight-{str_date}-{offset}-{offset+limit}.json"
+    local_json_path = (
+        json_dir / f"flight-{str_date}-{offset}-{offset+limit}.json"
+    )
     logger.info(f"saving to {local_json_path}")
     with open(local_json_path, "w") as j:
         json.dump(api_response, j)
@@ -113,6 +112,7 @@ def get_all_delays(
         json_path = write_local_json(
             response, json_dir=json_dir, str_date=str_date, offset=retrieved
         )
+        logger.debug(f"Saved to {json_path}")
         responses.extend(response["data"])
         retrieved += response["pagination"]["count"]
         if not total:
@@ -204,7 +204,9 @@ def main(
     logger.addHandler(logging.FileHandler(data_dir / "debug.log"))
     logger.debug(f"log level: {loglevel}")
     logger.info(f"Execution time: {datetime.now()}")
-    logger.info(f"Searching flights from {str_date}\nUse local json: {local_json}")
+    logger.info(
+        f"Searching flights from {str_date}\nUse local json: {local_json}"
+    )
     # flatten the nested dicts in the response jsons
     json_dir = data_dir / "responses" / airline_iata.lower()
     if local_json:

@@ -10,7 +10,7 @@ services:
       "--loglevel", "info"
     ]
     env_file: # use separate .env to store separate api key
-      - ./.env
+      - ./f1.env
     volumes:
       - type: bind
         source: ./data
@@ -24,6 +24,7 @@ services:
       - type: bind
         source: ./pyproject.toml
         target: /app/pyproject.toml
+  # each service is responsible for a different airline
   flights-2:
     <<: *flight_template
     command: [
@@ -32,8 +33,9 @@ services:
       "--template_dir", "/templates",
       "--loglevel", "info"
     ]
+    # separate .env file containing different keys
     env_file:
-      - ./.env
+      - ./f2.env
   flights-3:
     <<: *flight_template
     command: [
@@ -43,5 +45,4 @@ services:
       "--loglevel", "info"
     ]
     env_file:
-      - ./.env
-
+      - ./f3.env

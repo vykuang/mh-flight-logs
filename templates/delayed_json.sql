@@ -1,4 +1,4 @@
-WITH RECURSIVE 
+WITH RECURSIVE
 delays(flight_num, start, dest, delay) as (
     SELECT
         flight_iata_number as flight_num,
@@ -13,12 +13,12 @@ SELECT
     flight_num,
     REPLACE(
     REPLACE(
-    REPLACE(start, ' International Airport', ''), 
+    REPLACE(start, ' International Airport', ''),
     ' International', ''),
     ' Airport', '') AS start,
     REPLACE(
     REPLACE(
-    REPLACE(dest, ' International Airport', ''), 
+    REPLACE(dest, ' International Airport', ''),
     ' International', ''),
     ' Airport', '') AS dest,
     delay

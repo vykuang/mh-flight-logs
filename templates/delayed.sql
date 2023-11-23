@@ -1,9 +1,9 @@
-SELECT 
+SELECT
     ROW_NUMBER() OVER (ORDER BY CAST({{a_delay}} AS INTEGER) DESC) delay_rank,
     {{flight_num}},
     REPLACE(
     REPLACE(
-    REPLACE({{a_port}}, ' International Airport', ''), 
+    REPLACE({{a_port}}, ' International Airport', ''),
     ' International', ''),
     ' Airport', '') AS {{a_port}},
     REPLACE(
