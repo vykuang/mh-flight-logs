@@ -4,6 +4,7 @@
 *.json
 data/
 .env
+*.env
 nohup.out
 
 # notebook artifacts
