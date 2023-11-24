@@ -24,19 +24,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# load docker secrets
-load_dotenv("/run/secrets/aviation_api")
-load_dotenv("/run/secrets/twitter_api")
-
-AV_API_KEY = os.getenv("AVIATION_API_KEY", "")
-AV_API_URL = "http://api.aviationstack.com/v1/"
-FLIGHT_API_URL = AV_API_URL + "flights"
-
-TWITTER_API_KEY = os.getenv("TWITTER_API_KEY")
-TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET")
-TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
-TWITTER_ACCESS_SECRET = os.getenv("TWITTER_ACCESS_SECRET")
-
 toml_path = Path("pyproject.toml")
 with open(toml_path, "rb") as f:
     config = tomllib.load(f)
@@ -44,6 +31,20 @@ with open(toml_path, "rb") as f:
 DB_NAME = config["sqlite"]["db_name"]
 TBL_NAME = config["sqlite"]["tbl_name"]
 JSON_COL = config["sqlite"]["json_col"]
+AV_API_URL = config["aviationstack"]["base_url"]
+AV_API_ENDPOINT = config["aviationstack"]["flight"]
+
+# load docker secrets
+load_dotenv("/run/secrets/aviation_api")
+load_dotenv("/run/secrets/twitter_api")
+
+AV_API_KEY = os.getenv("AVIATION_API_KEY", "")
+FLIGHT_API_URL = AV_API_URL + AV_API_ENDPOINT
+
+TWITTER_API_KEY = os.getenv("TWITTER_API_KEY")
+TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET")
+TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
+TWITTER_ACCESS_SECRET = os.getenv("TWITTER_ACCESS_SECRET")
 
 
 def write_local_json(

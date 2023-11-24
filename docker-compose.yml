@@ -2,9 +2,6 @@ version: '3'
 
 x-airline:
   &flight-template
-  image: asean-flight-logs:dev
-  build:
-    context: .
   volumes:
     - type: bind
       source: ./data
@@ -12,9 +9,6 @@ x-airline:
     - type: bind
       source: ./templates
       target: /templates
-    - type: bind
-      source: ./asean_flight_logs/main.py
-      target: /app/main.py
     - type: bind
       source: ./pyproject.toml
       target: /app/pyproject.toml
@@ -34,9 +28,6 @@ services:
     # without the use of templating engine e.g. jinja
     command: [
       "--airline_iata", "ak",
-      "--data_dir", "/data",
-      "--template_dir", "/templates",
-      "--loglevel", "info"
     ]
     environment:
       <<: *twitter-env
@@ -51,9 +42,6 @@ services:
     <<: *flight-template
     command: [
       "--airline_iata", "mh",
-      "--data_dir", "/data",
-      "--template_dir", "/templates",
-      "--loglevel", "info"
     ]
     environment:
       <<: *twitter-env
@@ -66,9 +54,6 @@ services:
     <<: *flight-template
     command: [
       "--airline_iata", "sq",
-      "--data_dir", "/data",
-      "--template_dir", "/templates",
-      "--loglevel", "info"
     ]
     environment:
       <<: *twitter-env

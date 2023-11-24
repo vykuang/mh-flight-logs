@@ -1,0 +1,13 @@
+x-profile:
+  &prod-profile
+  image: asean-flight-logs:latest
+  build:
+    context: prod.Dockerfile
+services:
+  airline-1:
+    &prod-service
+    <<: *prod-profile
+  airline-2:
+    <<: *prod-service
+  airline-3:
+    <<: *prod-service

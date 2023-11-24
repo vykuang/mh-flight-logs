@@ -1,0 +1,20 @@
+x-volumes:
+  - &dev-volume
+    type: bind
+    source: ./asean_flight_logs/main.py
+    target: /app/main.py
+x-profile:
+  &dev-profile
+  image: asean-flight-logs:dev
+  build:
+    context: dev.Dockerfile
+services:
+  airline-1:
+    &dev-service
+    <<: *dev-profile
+    volumes:
+      - *dev-volume
+  airline-2:
+    <<: *dev-service
+  airline-3:
+    <<: *dev-service
