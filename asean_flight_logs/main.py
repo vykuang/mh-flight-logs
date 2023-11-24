@@ -15,6 +15,7 @@ import logging
 from sys import stdout
 import jinja2
 import tomllib
+from dotenv import load_dotenv
 
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(funcName)s: %(message)s",
@@ -22,6 +23,10 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(stdout)],
 )
 logger = logging.getLogger(__name__)
+
+# load docker secrets
+load_dotenv("/run/secrets/aviation_api")
+load_dotenv("/run/secrets/twitter_api")
 
 AV_API_KEY = os.getenv("AVIATION_API_KEY", "")
 AV_API_URL = "http://api.aviationstack.com/v1/"

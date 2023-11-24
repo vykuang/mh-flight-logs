@@ -1,48 +1,89 @@
+version: '3'
+
+x-airline:
+  &flight-template
+  image: asean-flight-logs:dev
+  build:
+    context: .
+  volumes:
+    - type: bind
+      source: ./data
+      target: /data
+    - type: bind
+      source: ./templates
+      target: /templates
+    - type: bind
+      source: ./asean_flight_logs/main.py
+      target: /app/main.py
+    - type: bind
+      source: ./pyproject.toml
+      target: /app/pyproject.toml
+x-twitter-secret:
+  - &twitter-secret
+    source: twitter_api
+    target: twitter_api
+x-env:
+  &twitter-env
+  TWITTER_API: /run/secrets/twitter_api
+
 services:
-  flights-1: &flight_template
-    image: asean-flight-logs:dev
-    build:
-      context: .
+  airline-1:
+    <<: *flight-template
+    # individual cmd for different airlines searched
+    # sequences like these are not able to be merged
+    # without the use of templating engine e.g. jinja
     command: [
       "--airline_iata", "ak",
       "--data_dir", "/data",
       "--template_dir", "/templates",
       "--loglevel", "info"
     ]
-    env_file: # use separate .env to store separate api key
-      - ./f1.env
-    volumes:
-      - type: bind
-        source: ./data
-        target: /data
-      - type: bind
-        source: ./templates
-        target: /templates
-      - type: bind
-        source: ./asean_flight_logs/main.py
-        target: /app/main.py
-      - type: bind
-        source: ./pyproject.toml
-        target: /app/pyproject.toml
+    environment:
+      <<: *twitter-env
+      AVIATION_API: /run/secrets/aviation_api
+    secrets:
+      - *twitter-secret
+      - source: av1_api
+        target: aviation_api
+
   # each service is responsible for a different airline
-  flights-2:
-    <<: *flight_template
+  airline-2:
+    <<: *flight-template
     command: [
       "--airline_iata", "mh",
       "--data_dir", "/data",
       "--template_dir", "/templates",
       "--loglevel", "info"
     ]
-    # separate .env file containing different keys
-    env_file:
-      - ./f2.env
-  flights-3:
-    <<: *flight_template
+    environment:
+      <<: *twitter-env
+      AVIATION_API: /run/secrets/aviation_api
+    secrets:
+      - *twitter-secret
+      - source: av2_api
+        target: aviation_api
+  airline-3:
+    <<: *flight-template
     command: [
       "--airline_iata", "sq",
       "--data_dir", "/data",
       "--template_dir", "/templates",
       "--loglevel", "info"
     ]
-    env_file:
-      - ./f3.env
+    environment:
+      <<: *twitter-env
+      AVIATION_API: /run/secrets/aviation_api
+    secrets:
+      - *twitter-secret
+      - source: av3_api
+        target: aviation_api
+
+secrets:
+  twitter_api:
+    file: ./twitter_api
+  av1_api:
+    file: ./av1_api
+  av2_api:
+    file: ./av2_api
+  av3_api:
+    file: ./av3_api

@@ -5,6 +5,7 @@
 data/
 .env
 *.env
+*_api
 nohup.out
 .ruff_cache/
 
