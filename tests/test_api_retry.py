@@ -1,15 +1,16 @@
 import requests
+import responses
 import pytest
+import json
 from asean_flight_logs import main
 
 
 class MockResponse:
     @staticmethod
     def json():
-        return {
-            "data": "mock_response",
-            "pagination": {"count": 100, "total": 200},
-        }
+        with open("tests/data/sample_flight_response.json") as f:
+            response = json.load(f)
+        return response
 
     @staticmethod
     def raise_for_status():
@@ -31,13 +32,13 @@ def mock_response(monkeypatch):
 # our test uses the custom fixture instead of monkeypatch directly
 def test_get_json(mock_response):
     res = main.get_all_delays("aa", "2000-01-01", "data")
-    assert res == "mock_response"
+    assert len(res) == 100
 
 
 def test_request_retry():
     assert True
 
 
-def test_todo_api():
-    response = requests.get("http://jsonplaceholder.typicode.com/todos")
-    assert response.ok
+#def test_todo_api():
+#    response = requests.get("http://jsonplaceholder.typicode.com/todos")
+#    assert response.ok
