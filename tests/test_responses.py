@@ -1,12 +1,11 @@
-from requests.exceptions import ConnectionError
 import responses
 from responses import registries
-from asean_flight_logs import main
 from datetime import datetime, timezone
 import tomllib
 from pathlib import Path
 import re
-import pytest
+
+from asean_flight_logs import main
 
 toml_path = Path("pyproject.toml")
 with open(toml_path, "rb") as f:
@@ -30,14 +29,17 @@ def test_aviation_api(sample_payload, tmp_path):
     # )
     # # .add() to register
     # responses.add(resp1)
-    responses.add(
-        responses.GET,
-        # takes a regex compiled object to match
-        re.compile(f"{AV_API_URL}.*"),
-        json=sample_payload,
-        status=200,
-    )
 
+    # responses.add(
+    #     responses.GET,
+    #     # takes a regex compiled object to match
+    #     re.compile(f"{AV_API_URL}.*"),
+    #     json=sample_payload,
+    #     status=200,
+    # )
+    responses.get(
+        re.compile(f"{AV_API_URL}.*"), json=sample_payload, status=200
+    )
     sample_flights = main.get_all_delays(
         airline_iata="mh",
         str_date=datetime.now(tz=timezone.utc).date(),
@@ -56,29 +58,19 @@ def test_max_retries(sample_payload, sample_error, tmp_path):
     # shortcut to responses.add(responses.GET, ...)
     rsp1 = responses.get(url, json=sample_error, status=500)
     rsp2 = responses.get(url, json=sample_error, status=502)
+    # we end up calling it twice because sample total = 200, and
+    # each call retrieves only 100 entries
     rsp3 = responses.get(url, json=sample_payload, status=200)
+    rsp4 = responses.get(url, json=sample_payload, status=200)
 
-    # session = requests.Session()
+    sample_flights = main.get_all_delays(
+        airline_iata="mh",
+        str_date=datetime.now(tz=timezone.utc).date(),
+        json_dir=tmp_path,
+    )
 
-    # adapter = requests.adapters.HTTPAdapter(
-    #     max_retries=Retry(
-    #         total=4,
-    #         backoff_factor=0.1,
-    #         status_forcelist=[500, 501],
-    #         allowed_methods=["GET", "POST", "PATCH"],
-    #     )
-    # )
-    # session.mount("https://", adapter)
-
-    # resp = session.get(url)
-    with pytest.raises(ConnectionError):
-        sample_flights = main.get_all_delays(
-            airline_iata="mh",
-            str_date=datetime.now(tz=timezone.utc).date(),
-            json_dir=tmp_path,
-        )
-
-    # assert len(sample_flights) == 200
+    assert len(sample_flights) == 200
     assert rsp1.call_count == 1
     assert rsp2.call_count == 1
     assert rsp3.call_count == 1
+    assert rsp4.call_count == 1

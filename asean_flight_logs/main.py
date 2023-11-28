@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import os
 from urllib3.util import Retry
-from requests import Session, HTTPError
+from requests import Session
 from requests.adapters import HTTPAdapter
-from requests.exceptions import ReadTimeout
+from requests.exceptions import Timeout, HTTPError
 import sqlite3
 import json
 from pathlib import Path
@@ -91,12 +91,12 @@ def get_all_delays(
     while not total or retrieved < total:
         sleep(0.5)
         logger.info(f"retrieving {retrieved}th to {retrieved + limit}th")
+        # do not filter via min_delay
         params = {
-            "access_key": AV_API_KEY,  # retrieved from .env, global scope
+            "access_key": AV_API_KEY,  # retrieved from docker mounted secret
             "offset": retrieved,
             "limit": limit,
             "airline_iata": airline_iata,
-            # "min_delay_arr": min_delay,
         }
         try:
             response = sesh.get(
@@ -104,31 +104,41 @@ def get_all_delays(
                 params=params,
                 timeout=30.0,
             )
+            # throws exceptions for 400-599 codes
             response.raise_for_status()
         except HTTPError as exc:
             logger.error(f"HTTP Error: \n{exc}")
 
-        except ReadTimeout as e:
+        except Timeout as e:
             logger.error(
                 f"Timeout retrieving {retrieved}th to {retrieved + limit}th:\n{e}"
             )
         # save response
         response = response.json()
-        logger.debug(f"retrieved {retrieved}th to {retrieved + limit}th")
-        json_path = write_local_json(
-            response, json_dir=json_dir, str_date=str_date, offset=retrieved
-        )
-        logger.debug(f"Saved to {json_path}")
-        responses.extend(response["data"])
-        retrieved += response["pagination"]["count"]
-        if not total:
-            # First request; get total count
-            total = response["pagination"]["total"]
-            logger.info(f"Total records count: {total}")
-            if total == 0:
-                # prevent infinite loop if there are no records retrieved
-                logger.error("Zero records retrieved; exiting")
-                break
+        if response["data"]:
+            logger.debug(f"retrieved {retrieved}th to {retrieved + limit}th")
+            json_path = write_local_json(
+                response,
+                json_dir=json_dir,
+                str_date=str_date,
+                offset=retrieved,
+            )
+            logger.debug(f"Saved to {json_path}")
+            responses.extend(response["data"])
+            retrieved += response["pagination"]["count"]
+            if not total:
+                # First request; get total count
+                total = response["pagination"]["total"]
+                logger.info(f"Total records count: {total}")
+                if total == 0:
+                    # prevent infinite loop if there are no records retrieved
+                    logger.error("Zero records retrieved; exiting")
+                    break
+        else:
+            err_msg = "API Error; no data retrieved. Exiting"
+            logger.error(err_msg)
+            raise ValueError(err_msg)
+
     return responses
 
 
@@ -226,9 +236,12 @@ def main(
 
     else:
         logger.info("Requesting flight API")
-        entries = get_all_delays(
-            airline_iata=airline_iata, str_date=str_date, json_dir=json_dir
-        )
+        try:
+            entries = get_all_delays(
+                airline_iata=airline_iata, str_date=str_date, json_dir=json_dir
+            )
+        except ValueError:
+            return None
 
     params = dict(
         tbl_name=TBL_NAME,

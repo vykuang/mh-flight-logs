@@ -1,11 +1,15 @@
 # pytest
 __pycache__/
 *.pyc
+.pytest_cache/
 # local data
 *.db
 *.log
 *.json
 data/
+# include testing sample data
+!tests/data
+!**/sample_*.json
 .env
 *.env
 *_api

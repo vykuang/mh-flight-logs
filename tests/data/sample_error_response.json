@@ -1,0 +1,14 @@
+{
+    "error": {
+       "code": "validation_error",
+       "message": "Request failed with validation error",
+       "context": {
+          "flight_date": [
+             {
+                "key": "invalid_flight_date",
+                "message": "The flight date must be a valid date in the format YYYY-MM-DD."
+             }
+          ]
+       }
+    }
+ }
