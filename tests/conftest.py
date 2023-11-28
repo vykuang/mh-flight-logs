@@ -4,7 +4,8 @@ build an adapter, i.e. wrapper for our external API instead. This should
 disentangle our business logic from API integration. Abstracting the API call
 away exposes readable methods for us to call in testing code
 """
-
+import pytest
+import json
 
 # @pytest.fixture(autouse=True)
 # def no_requests(monkeypatch):
@@ -14,3 +15,15 @@ away exposes readable methods for us to call in testing code
 
 class AviationAPI:
     API_URL = "https://api.aviationstack.com"
+
+
+@pytest.fixture
+def sample_payload():
+    with open("tests/data/sample_flight_response.json") as f:
+        return json.load(f)
+
+
+@pytest.fixture
+def sample_error():
+    with open("tests/data/sample_error_response.json") as f:
+        return json.load(f)
