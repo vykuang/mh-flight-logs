@@ -5,6 +5,5 @@ tests/
 
 # files
 *.sh
-Dockerfile
 *.out
 *.md

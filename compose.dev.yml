@@ -7,7 +7,8 @@ x-profile:
   &dev-profile
   image: asean-flight-logs:dev
   build:
-    context: dev.Dockerfile
+    context: dockerfiles
+    dockerfile: dev.Dockerfile
 services:
   airline-1:
     &dev-service

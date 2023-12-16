@@ -65,10 +65,10 @@ services:
 
 secrets:
   twitter_api:
-    file: ./twitter_api
+    file: secrets/twitter_api
   av1_api:
-    file: ./av1_api
+    file: secrets/av1_api
   av2_api:
-    file: ./av2_api
+    file: secrets/av2_api
   av3_api:
-    file: ./av3_api
+    file: secrets/av3_api
