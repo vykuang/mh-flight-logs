@@ -3,7 +3,7 @@ import os
 from urllib3.util import Retry
 from requests import Session
 from requests.adapters import HTTPAdapter
-from requests.exceptions import Timeout, HTTPError
+from requests.exceptions import Timeout
 import sqlite3
 import json
 from pathlib import Path
@@ -78,9 +78,9 @@ def get_all_delays(
     sesh = Session()
     adapter = HTTPAdapter(
         max_retries=Retry(
-            total=3,
+            total=4,
             backoff_factor=0.1,
-            status_forcelist=[500, 502, 503, 504],
+            status_forcelist=[500, 502, 503, 504, 404],
             # allowed_methods={"POST"},
         )
     )
@@ -94,9 +94,9 @@ def get_all_delays(
         # do not filter via min_delay
         params = {
             "access_key": AV_API_KEY,  # retrieved from docker mounted secret
+            "airline_iata": airline_iata,
             "offset": retrieved,
             "limit": limit,
-            "airline_iata": airline_iata,
         }
         try:
             response = sesh.get(
@@ -106,8 +106,8 @@ def get_all_delays(
             )
             # throws exceptions for 400-599 codes
             response.raise_for_status()
-        except HTTPError as exc:
-            logger.error(f"HTTP Error: \n{exc}")
+        # except HTTPError as exc:
+        # logger.error(f"HTTP Error: \n{exc}")
 
         except Timeout as e:
             logger.error(

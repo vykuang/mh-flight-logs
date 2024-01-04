@@ -7,7 +7,9 @@ __pycache__/
 *.log
 *.json
 data/
+secrets/
 # include testing sample data
+tests/data/responses
 !tests/data
 !**/sample_*.json
 .env
